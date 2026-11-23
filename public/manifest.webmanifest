@@ -1,0 +1,10 @@
+{
+  "name": "Voluen Alerta · Imperatriz",
+  "short_name": "Voluen Alerta",
+  "description": "Avise sobre alagamentos e problemas de drenagem em Imperatriz-MA.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#F2F5F6",
+  "theme_color": "#0B2E3A",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}
