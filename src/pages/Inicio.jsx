@@ -4,6 +4,8 @@ import { useCarregar } from '../lib/hooks'
 import { CATEGORIAS } from '../lib/constants'
 import Mapa from '../components/Mapa'
 import { Icone, CatDot } from '../components/ui'
+import IlustracaoAlagamento from '../components/IlustracaoAlagamento'
+import { FOTOS } from '../lib/fotos'
 
 const PASSOS = [
   { t: 'Registre o problema', d: 'Escolha o tipo, marque o local no mapa, anexe uma foto e conte o que está acontecendo.', i: Icone.camera },
@@ -88,6 +90,9 @@ export default function Inicio() {
           <h2 className="mt-2 text-3xl font-semibold sm:text-4xl">Problemas com a água da chuva</h2>
           <p className="mt-4 max-w-md text-[15px] leading-relaxed text-slate-600">Imperatriz é cortada por riachos como o Bacuri, o Cacau, o Santa Teresa e o Capivara. Quando bueiros e canais entopem, a água da chuva invade ruas e casas. Seu aviso ajuda a equipe a chegar antes.</p>
           <p className="mt-4 max-w-md text-sm text-slate-500">Esgoto e abastecimento de água não fazem parte deste canal por enquanto.</p>
+          <div className="mt-8 overflow-hidden rounded-3xl border border-slate-200/80 shadow-soft">
+            <IlustracaoAlagamento className="block h-auto w-full" />
+          </div>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {Object.entries(CATEGORIAS).map(([k, c]) => (
@@ -98,6 +103,23 @@ export default function Inicio() {
           ))}
         </div>
       </section>
+
+      {FOTOS.length > 0 && (
+        <section className="bg-mist py-16">
+          <div className="wrap">
+            <div className="eyebrow">Imperatriz na época das chuvas</div>
+            <h2 className="mt-2 max-w-xl text-3xl font-semibold sm:text-4xl">O que os moradores veem todo ano</h2>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {FOTOS.map((f) => (
+                <figure key={f.arquivo} className="card overflow-hidden">
+                  <img src={`${import.meta.env.BASE_URL}fotos/${f.arquivo}`} alt={f.legenda} loading="lazy" className="aspect-[4/3] w-full object-cover" />
+                  <figcaption className="p-4 text-sm"><span className="font-medium text-deep">{f.legenda}</span>{f.credito && <span className="mt-0.5 block text-xs text-slate-500">{f.credito}</span>}</figcaption>
+                </figure>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="wrap pb-20">
         <div className="relative overflow-hidden rounded-3xl bg-brand px-6 py-10 text-white sm:px-10">
