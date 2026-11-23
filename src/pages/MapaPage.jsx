@@ -38,7 +38,7 @@ export default function MapaPage() {
               <div className="space-y-1.5">
                 {Object.entries(CATEGORIAS).map(([k, c]) => (
                   <label key={k} className="flex cursor-pointer items-center gap-2.5 rounded-lg px-1 py-1 text-sm hover:bg-slate-50">
-                    <input type="checkbox" checked={cats.has(k)} onChange={() => alternar(k)} className="h-4 w-4 accent-[#0F5E6B]" />
+                    <input type="checkbox" checked={cats.has(k)} onChange={() => alternar(k)} className="h-4 w-4 accent-[#0B4DA2]" />
                     <CatDot categoria={k} /> {c.nome}
                   </label>
                 ))}

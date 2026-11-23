@@ -6,7 +6,7 @@
   html { -webkit-text-size-adjust: 100%; }
   body { @apply bg-white text-deep font-sans antialiased; }
   h1, h2, h3 { @apply font-display tracking-tight; text-wrap: balance; }
-  :focus-visible { outline: 2px solid #3CC6B0; outline-offset: 2px; }
+  :focus-visible { outline: 2px solid #2BB3E6; outline-offset: 2px; }
 }
 
 @layer components {
@@ -24,8 +24,8 @@
   .num { font-variant-numeric: tabular-nums; }
 }
 
-.leaflet-container { font-family: Inter, system-ui, sans-serif; background: #E8EEF0; }
-.leaflet-popup-content-wrapper { border-radius: 14px; box-shadow: 0 10px 30px rgba(11,46,58,.18); }
+.leaflet-container { font-family: Inter, system-ui, sans-serif; background: #E8EEF5; }
+.leaflet-popup-content-wrapper { border-radius: 14px; box-shadow: 0 10px 30px rgba(7,43,90,.18); }
 .leaflet-popup-content { margin: 12px 14px; }
 .pin { width: 18px; height: 18px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
 .pin-escolha { width: 30px; height: 30px; }

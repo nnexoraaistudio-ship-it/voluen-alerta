@@ -1,4 +1,4 @@
-export default function Barras({ itens, rotulo = (k) => k, cor = '#0F5E6B' }) {
+export default function Barras({ itens, rotulo = (k) => k, cor = '#0B4DA2' }) {
   const max = Math.max(1, ...itens.map((i) => i[1]))
   if (!itens.length) return <p className="text-sm text-slate-500">Sem dados no período.</p>
   return (

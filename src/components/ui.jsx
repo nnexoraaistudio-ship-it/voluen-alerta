@@ -1,15 +1,14 @@
 import { CATEGORIAS, STATUS } from '../lib/constants'
+import { VoluenMarca, VoluenIcone } from './Marca'
 
-export function Logo({ claro = false, sub = 'Imperatriz · MA' }) {
+// Logo do produto: "Imperatriz em Alerta, por Voluen" (decidido em 23/11/2026).
+export function Logo({ claro = false }) {
   return (
     <span className="flex items-center gap-2.5">
-      <svg width="36" height="36" viewBox="0 0 64 64" aria-hidden="true" className="shrink-0">
-        <rect width="64" height="64" rx="16" fill="#0F5E6B" />
-        <path d="M17 21l15 23 15-23" fill="none" stroke="#3CC6B0" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
+      <VoluenIcone size={36} className="shrink-0" />
       <span className="leading-tight">
-        <span className={`block font-display text-[15px] font-semibold ${claro ? 'text-white' : 'text-deep'}`}>Voluen Alerta</span>
-        <span className={`block text-[10.5px] font-semibold uppercase tracking-[.16em] ${claro ? 'text-accent' : 'text-brand'}`}>{sub}</span>
+        <span className={`block font-display text-[16px] font-semibold ${claro ? 'text-white' : 'text-deep'}`}>Imperatriz em Alerta</span>
+        <span className={`flex items-center gap-1 text-[10.5px] font-medium ${claro ? 'text-white/70' : 'text-slate-500'}`}>por <VoluenMarca claro={claro} className="h-[11px] w-auto translate-y-[1px]" /></span>
       </span>
     </span>
   )
