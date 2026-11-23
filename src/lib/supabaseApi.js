@@ -8,6 +8,7 @@ const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 const BUCKET = 'fotos'
 const urlFoto = (path) => (path ? sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl : null)
 const comFoto = (o) => ({ ...o, foto_url: urlFoto(o.foto_path) })
+const COLUNAS_EQUIPE = 'id, protocolo, categoria, bairro, rua, referencia, lat, lng, descricao, foto_path, status, motivo_recusa, consentimento_em, created_at, resolvida_em, tem_contato'
 const checar = ({ data, error }) => { if (error) throw new Error(error.message); return data }
 
 let perfil = null
@@ -54,7 +55,7 @@ export const supabaseApi = {
   },
   async sair() { await sb.auth.signOut() },
   async listarTodas() {
-    return checar(await sb.from('ocorrencias').select('*').order('created_at', { ascending: false })).map(comFoto)
+    return checar(await sb.from('ocorrencias').select(COLUNAS_EQUIPE).order('created_at', { ascending: false })).map(comFoto)
   },
   async historico(id) {
     return checar(await sb.from('historico').select('*').eq('ocorrencia_id', id).order('created_at'))
@@ -64,12 +65,11 @@ export const supabaseApi = {
   },
   async removerFoto(id) {
     const { data } = await sb.from('ocorrencias').select('foto_path').eq('id', id).single()
-    if (data?.foto_path) await sb.storage.from(BUCKET).remove([data.foto_path])
-    checar(await sb.from('ocorrencias').update({ foto_path: null }).eq('id', id))
+    if (data?.foto_path) checar(await sb.storage.from(BUCKET).remove([data.foto_path]))
+    checar(await sb.rpc('remover_foto', { p_id: id }))
   },
-  async apagarContato(id) {
-    checar(await sb.from('ocorrencias').update({ contato_nome: null, contato_telefone: null, contato_email: null }).eq('id', id))
-  },
+  async verContato(id) { return checar(await sb.rpc('ver_contato', { p_id: id })) },
+  async apagarContato(id) { checar(await sb.rpc('apagar_contato', { p_id: id })) },
   async listarEquipe() { return checar(await sb.from('perfis').select('id, nome, email, papel').order('nome')) },
   async mudarPapel(uid, papel) { checar(await sb.from('perfis').update({ papel }).eq('id', uid)) },
 }

@@ -6,7 +6,7 @@
 export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://jpkmbxubifxzcekzsspt.supabase.co'
 export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_2A06J-BfBKJxOZ52wg8ZnA_rckp2AGj'
 
-export const MODO_DEMO = !SUPABASE_URL || !SUPABASE_ANON_KEY
+export const MODO_DEMO = import.meta.env.VITE_MODO_DEMO === '1' || !SUPABASE_URL || !SUPABASE_ANON_KEY
 
 export const CONTATO_EMAIL = 'nnexora.ai.studio@gmail.com'
 export const RESPONSAVEL = 'Filipe Assunção'

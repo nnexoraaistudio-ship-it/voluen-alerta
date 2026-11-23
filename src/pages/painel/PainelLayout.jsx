@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, NavLink, Outlet, Link } from 'react-router-dom'
 import { api } from '../../lib/api'
 import { useCarregar, useSessao } from '../../lib/hooks'
@@ -12,6 +12,17 @@ export default function PainelLayout() {
   const { perfil, carregado } = useSessao()
   const dados = useCarregar(() => (perfil?.papel ? api.listarTodas() : Promise.resolve([])), [perfil?.id, perfil?.papel])
   const [aberto, setAberto] = useState(null)
+
+  // Segurança: sai sozinho do painel depois de 30 minutos sem uso (computador esquecido aberto).
+  useEffect(() => {
+    if (!perfil) return
+    let t
+    const reiniciar = () => { clearTimeout(t); t = setTimeout(() => api.sair(), 30 * 60 * 1000) }
+    const eventos = ['pointerdown', 'keydown', 'scroll', 'touchstart']
+    eventos.forEach((e) => window.addEventListener(e, reiniciar, { passive: true }))
+    reiniciar()
+    return () => { clearTimeout(t); eventos.forEach((e) => window.removeEventListener(e, reiniciar)) }
+  }, [perfil?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!carregado) return <div className="wrap"><Carregando /></div>
   if (!perfil) return <Navigate to="/equipe" replace />

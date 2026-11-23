@@ -30,7 +30,7 @@ export default function Acompanhar() {
         <p className="mt-2 text-slate-600">Digite o número recebido no fim do registro para ver a situação e cada etapa do atendimento.</p>
         <form onSubmit={buscar} className="mt-6 flex gap-2">
           <label htmlFor="prot" className="sr-only">Número do protocolo</label>
-          <input id="prot" className="input font-mono uppercase" value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Ex.: VA-2026-01180" />
+          <input id="prot" className="input font-mono uppercase" value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Ex.: VA-2026-01180-4F2A" />
           <button className="btn-brand shrink-0 px-6"><Icone.busca /> Consultar</button>
         </form>
 

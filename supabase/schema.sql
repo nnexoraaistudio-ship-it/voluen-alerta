@@ -38,6 +38,10 @@ create table if not exists public.ocorrencias (
   resolvida_em timestamptz
 );
 
+-- Diz se a pessoa deixou contato, sem revelar qual (a equipe vê isso; o contato em si, só o admin).
+alter table public.ocorrencias add column if not exists tem_contato boolean
+  generated always as (coalesce(contato_nome, contato_telefone, contato_email) is not null) stored;
+
 create index if not exists ocorrencias_status_idx on public.ocorrencias (status);
 create index if not exists ocorrencias_created_idx on public.ocorrencias (created_at desc);
 
@@ -50,6 +54,14 @@ create table if not exists public.historico (
   created_at timestamptz not null default now()
 );
 create index if not exists historico_ocorrencia_idx on public.historico (ocorrencia_id);
+
+-- Controle anti-abuso: guarda por 1 dia um código embaralhado da conexão (não o endereço IP em si).
+create table if not exists public.limites (
+  chave text not null,
+  criado timestamptz not null default now()
+);
+create index if not exists limites_idx on public.limites (chave, criado);
+alter table public.limites enable row level security;
 
 -- ---------- Funções de apoio ----------
 
@@ -110,14 +122,19 @@ create policy "admin muda papéis" on public.perfis
 
 -- Permissões explícitas (funcionam mesmo com "Grant API access automatically" desligado).
 grant usage on schema public to anon, authenticated;
-grant select, delete on public.ocorrencias to authenticated;
+grant delete on public.ocorrencias to authenticated;
+-- A equipe lê tudo MENOS nome, telefone e e-mail do morador (esses só pela função ver_contato, para admin).
+revoke select on public.ocorrencias from authenticated;
+grant select (id, protocolo, categoria, bairro, rua, referencia, lat, lng, descricao, foto_path, status,
+  motivo_recusa, consentimento_em, created_at, resolvida_em, tem_contato) on public.ocorrencias to authenticated;
 grant select on public.historico to authenticated;
 grant select, update (papel) on public.perfis to authenticated;
 
 -- Impede que a equipe mude colunas sensíveis por fora das funções.
 revoke update on public.ocorrencias from authenticated;
-grant update (foto_path, contato_nome, contato_telefone, contato_email) on public.ocorrencias to authenticated;
-revoke all on public.ocorrencias, public.historico, public.perfis from anon;
+revoke all on public.ocorrencias, public.historico, public.perfis, public.limites from anon;
+revoke all on public.limites from authenticated;
+revoke all on sequence public.protocolo_seq from anon, authenticated;
 
 -- ---------- O que o público pode ver ----------
 
@@ -139,14 +156,41 @@ language plpgsql security definer set search_path = public as $$
 declare
   v_protocolo text;
   v_id uuid;
+  v_ip text;
+  v_chave text;
+  v_email text := nullif(lower(trim(p_contato_email)), '');
 begin
+  -- Anti-abuso: no máximo 5 registros a cada 10 minutos por conexão e 120 por hora no total.
+  v_ip := split_part(coalesce(current_setting('request.headers', true)::json ->> 'x-forwarded-for', ''), ',', 1);
+  v_chave := case when trim(v_ip) <> '' then md5('voluen-alerta:' || trim(v_ip)) end;
+  delete from public.limites where criado < now() - interval '1 day';
+  if v_chave is not null and (select count(*) from public.limites where chave = v_chave and criado > now() - interval '10 minutes') >= 5 then
+    raise exception 'Muitos registros seguidos. Aguarde alguns minutos e tente de novo.';
+  end if;
+  if (select count(*) from public.ocorrencias where created_at > now() - interval '1 hour') >= 120 then
+    raise exception 'O sistema recebeu muitos registros agora. Tente de novo em alguns minutos.';
+  end if;
+  if v_chave is not null then insert into public.limites (chave) values (v_chave); end if;
+
+  -- A foto precisa ser uma que acabou de ser enviada para a pasta de fotos.
+  if p_foto_path is not null and (p_foto_path !~ '^[0-9a-f-]{36}\.jpg$'
+     or not exists (select 1 from storage.objects where bucket_id = 'fotos' and name = p_foto_path)
+     or exists (select 1 from public.ocorrencias where foto_path = p_foto_path)) then
+    raise exception 'Foto inválida. Envie a foto de novo.';
+  end if;
+  if v_email is not null and v_email !~ '^[^@\s]+@[^@\s]+\.[^@\s]+$' then
+    raise exception 'E-mail inválido.';
+  end if;
+
+  -- Protocolo com final aleatório, para ninguém conseguir adivinhar o protocolo de outra pessoa.
   v_protocolo := 'VA-' || to_char(now() at time zone 'America/Araguaina', 'YYYY') || '-'
-                 || lpad(nextval('public.protocolo_seq')::text, 5, '0');
+                 || lpad(nextval('public.protocolo_seq')::text, 5, '0') || '-'
+                 || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 4));
   insert into public.ocorrencias (protocolo, categoria, bairro, rua, referencia, lat, lng, descricao,
     foto_path, contato_nome, contato_telefone, contato_email, consentimento_em)
   values (v_protocolo, p_categoria, trim(p_bairro), trim(p_rua), nullif(trim(p_referencia), ''), p_lat, p_lng,
     trim(p_descricao), p_foto_path, nullif(trim(p_contato_nome), ''), nullif(trim(p_contato_telefone), ''),
-    nullif(trim(p_contato_email), ''), now())
+    v_email, now())
   returning id into v_id;
   insert into public.historico (ocorrencia_id, status) values (v_id, 'moderacao');
   return v_protocolo;
@@ -191,25 +235,61 @@ begin
 
   insert into public.historico (ocorrencia_id, status, mensagem, autor)
   values (p_id, p_status, coalesce(nullif(trim(p_mensagem), ''), case when p_status = 'recusada' then p_motivo end), auth.uid());
+
+  -- Política de privacidade: contato é apagado quando a ocorrência é encerrada.
+  if p_status in ('resolvida', 'recusada') then
+    update public.ocorrencias set contato_nome = null, contato_telefone = null, contato_email = null where id = p_id;
+  end if;
 end $$;
 
-revoke all on function public.mudar_status(uuid, text, text, text) from anon;
+-- Tirar a foto de uma ocorrência (moderadores e administradores). O arquivo é apagado pelo site.
+create or replace function public.remover_foto(p_id uuid) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if public.meu_papel() not in ('admin', 'moderador') then raise exception 'Sem permissão.'; end if;
+  update public.ocorrencias set foto_path = null where id = p_id;
+end $$;
+
+-- Só administradores veem nome, telefone e e-mail do morador.
+create or replace function public.ver_contato(p_id uuid) returns json
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if public.meu_papel() is distinct from 'admin' then raise exception 'Somente administradores veem os dados de contato.'; end if;
+  return (select json_build_object('nome', contato_nome, 'telefone', contato_telefone, 'email', contato_email)
+          from public.ocorrencias where id = p_id);
+end $$;
+
+-- Apagar contato a pedido do morador: administradores e moderadores.
+create or replace function public.apagar_contato(p_id uuid) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if public.meu_papel() not in ('admin', 'moderador') then raise exception 'Sem permissão.'; end if;
+  update public.ocorrencias set contato_nome = null, contato_telefone = null, contato_email = null where id = p_id;
+end $$;
+
+revoke all on function public.mudar_status(uuid, text, text, text) from public, anon;
+revoke all on function public.ver_contato(uuid) from public, anon;
+revoke all on function public.apagar_contato(uuid) from public, anon;
+grant execute on function public.ver_contato(uuid) to authenticated;
+grant execute on function public.apagar_contato(uuid) to authenticated;
+revoke all on function public.remover_foto(uuid) from public, anon;
+grant execute on function public.remover_foto(uuid) to authenticated;
 grant execute on function public.registrar_ocorrencia(text, text, text, text, double precision, double precision, text, text, text, text, text) to anon, authenticated;
 grant execute on function public.consultar_protocolo(text) to anon, authenticated;
 grant execute on function public.mudar_status(uuid, text, text, text) to authenticated;
 
 -- ---------- Fotos ----------
--- Pasta pública "fotos": qualquer pessoa pode ENVIAR uma foto nova (até 5 MB, só imagem),
+-- Pasta pública "fotos": qualquer pessoa pode ENVIAR uma foto nova (até 3 MB, só JPEG, nome aleatório),
 -- mas não pode listar, trocar nem apagar fotos. Os nomes dos arquivos são aleatórios.
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-values ('fotos', 'fotos', true, 5242880, array['image/jpeg', 'image/png', 'image/webp'])
-on conflict (id) do update set public = true, file_size_limit = 5242880,
-  allowed_mime_types = array['image/jpeg', 'image/png', 'image/webp'];
+values ('fotos', 'fotos', true, 3145728, array['image/jpeg'])
+on conflict (id) do update set public = true, file_size_limit = 3145728,
+  allowed_mime_types = array['image/jpeg'];
 
 drop policy if exists "qualquer um envia foto" on storage.objects;
 create policy "qualquer um envia foto" on storage.objects
-  for insert to anon, authenticated with check (bucket_id = 'fotos');
+  for insert to anon, authenticated with check (bucket_id = 'fotos' and name ~ '^[0-9a-f-]{36}\.jpg$');
 
 drop policy if exists "equipe apaga foto" on storage.objects;
 create policy "equipe apaga foto" on storage.objects

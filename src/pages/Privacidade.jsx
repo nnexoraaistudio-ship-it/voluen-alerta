@@ -23,6 +23,7 @@ export default function Privacidade() {
             <li><b>Sobre a ocorrência:</b> tipo do problema, bairro, rua, ponto de referência, local marcado no mapa, descrição, foto (se você enviar), data e hora do registro.</li>
             <li><b>Sobre você, só se quiser informar:</b> nome, telefone ou e-mail. O registro anônimo é sempre possível.</li>
             <li><b>Registro do seu consentimento:</b> a data e a hora em que você aceitou esta política.</li>
+            <li><b>Proteção contra abuso:</b> para impedir envios em massa, guardamos por no máximo 1 dia um código embaralhado gerado a partir da conexão de quem registra. Esse código não permite identificar você e é apagado automaticamente.</li>
           </ul>
           <p>Não usamos ferramentas de estatística, propaganda ou rastreamento. A foto é reduzida no seu aparelho antes do envio, o que também remove informações escondidas no arquivo, como a localização GPS da câmera.</p>
         </S>
@@ -57,7 +58,7 @@ export default function Privacidade() {
           <p>Você pode pedir, a qualquer momento: confirmação de que temos dados seus, acesso a eles, correção, exclusão, informação sobre com quem foram compartilhados e a retirada do seu consentimento. Para isso, escreva para <span className="select-all font-semibold text-brand">{CONTATO_EMAIL}</span> informando o número do protocolo, se tiver. Responderemos em até 15 dias. Você também pode reclamar na Autoridade Nacional de Proteção de Dados (ANPD).</p>
         </S>
         <S n="9" t="Segurança">
-          <p>O painel de gestão só pode ser acessado por pessoas autorizadas, com login e senha. Usamos conexão segura (https), e o banco de dados só libera os dados de contato para a equipe autorizada.</p>
+          <p>O painel de gestão só pode ser acessado por pessoas autorizadas, com login e senha, e a sessão é encerrada sozinha após 30 minutos sem uso. Usamos conexão segura (https). Cada pessoa da equipe vê só o que precisa para a sua função: nome, telefone e e-mail do morador ficam visíveis apenas para administradores e são apagados automaticamente quando a ocorrência é resolvida ou recusada. O número de protocolo tem um final aleatório, para que ninguém consiga adivinhar o protocolo de outra pessoa.</p>
         </S>
         <S n="10" t="Cookies e armazenamento no navegador">
           <p>O site não usa cookies de propaganda nem de rastreamento. Guardamos no seu navegador apenas o necessário para o funcionamento, como a confirmação de que você viu o aviso de privacidade e, para a equipe, a sessão de login.</p>
@@ -67,6 +68,7 @@ export default function Privacidade() {
         </S>
         <S n="12" t="Mudanças e contato">
           <p>Podemos atualizar esta política, e a data da última atualização fica sempre no topo desta página. Dúvidas sobre privacidade: <span className="select-all font-semibold text-brand">{CONTATO_EMAIL}</span>.</p>
+          <p>Encarregado pelo tratamento de dados pessoais (LGPD, art. 41): {RESPONSAVEL}, pelo mesmo e-mail.</p>
         </S>
       </div>
     </div>

@@ -120,7 +120,15 @@ export const demoApi = {
     return u
   },
   async sair() { sessao = null; try { sessionStorage.removeItem(CHAVE + '-sessao') } catch { /* nada */ } ouvintes.forEach((f) => f(null)) },
-  async listarTodas() { await espera(); return ler().ocorrencias },
+  async listarTodas() {
+    await espera()
+    return ler().ocorrencias.map(({ contato_nome, contato_telefone, contato_email, ...o }) => ({ ...o, tem_contato: !!(contato_nome || contato_telefone || contato_email) }))
+  },
+  async verContato(id) {
+    if (sessao?.papel !== 'admin') throw new Error('Somente administradores veem os dados de contato.')
+    const o = ler().ocorrencias.find((x) => x.id === id)
+    return { nome: o.contato_nome || null, telefone: o.contato_telefone || null, email: o.contato_email || null }
+  },
   async historico(id) { return ler().historico.filter((h) => h.ocorrencia_id === id).sort((a, b) => a.created_at.localeCompare(b.created_at)) },
   async mudarStatus(id, status, mensagem, motivo) {
     await espera()
@@ -129,6 +137,7 @@ export const demoApi = {
     o.status = status
     if (status === 'recusada') o.motivo_recusa = motivo
     if (status === 'resolvida') o.resolvida_em = new Date().toISOString()
+    if (status === 'resolvida' || status === 'recusada') Object.assign(o, { contato_nome: '', contato_telefone: '', contato_email: '' })
     s.historico.push({ id: id + '-' + Date.now(), ocorrencia_id: id, status, mensagem: mensagem || (status === 'recusada' ? motivo : null), created_at: new Date().toISOString() })
     salvar(s)
   },

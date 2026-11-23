@@ -16,8 +16,9 @@ export default function Detalhe({ id, fechar }) {
   const [motivo, setMotivo] = useState(MOTIVOS_RECUSA[0])
   const [ocupado, setOcupado] = useState(false)
   const [aviso, setAviso] = useState('')
+  const [contato, setContato] = useState(null)
 
-  useEffect(() => { setAviso(''); setRecusando(false) }, [id])
+  useEffect(() => { setAviso(''); setRecusando(false); setContato(null) }, [id])
   useEffect(() => { if (o) { api.historico(o.id).then(setHist); setNovo(o.status); setMsg('') } }, [o?.id, o?.status]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { const f = (e) => e.key === 'Escape' && fechar(); window.addEventListener('keydown', f); return () => window.removeEventListener('keydown', f) }, [fechar])
   if (!o) return null
@@ -26,7 +27,8 @@ export default function Detalhe({ id, fechar }) {
     setOcupado(true); setAviso('')
     try { await fn(); await recarregar(); setAviso(texto) } catch (e) { setAviso('Erro: ' + e.message) } finally { setOcupado(false) }
   }
-  const temContato = o.contato_nome || o.contato_telefone || o.contato_email
+  const temContato = o.tem_contato
+  const ehAdmin = perfil.papel === 'admin'
 
   return (
     <div className="fixed inset-0 z-[2000] no-print">
@@ -92,12 +94,15 @@ export default function Detalhe({ id, fechar }) {
             <dt className="text-slate-500">Descrição</dt><dd className="whitespace-pre-wrap">{o.descricao}</dd>
             <dt className="text-slate-500">Contato</dt>
             <dd>{temContato ? (<>
-              <div>{o.contato_nome}</div><div className="select-all">{o.contato_telefone}</div><div className="select-all">{o.contato_email}</div>
-              <button disabled={ocupado} onClick={() => fazer(() => api.apagarContato(o.id), 'Dados de contato apagados.')} className="mt-1 text-xs font-semibold text-rose-700">Apagar dados de contato</button>
+              {contato ? (<>
+                <div>{contato.nome}</div><div className="select-all">{contato.telefone}</div><div className="select-all">{contato.email}</div>
+              </>) : ehAdmin ? (
+                <button disabled={ocupado} onClick={() => api.verContato(o.id).then(setContato, (e) => setAviso('Erro: ' + e.message))} className="text-xs font-semibold text-brand">Mostrar contato</button>
+              ) : <span className="text-slate-500">Informado (visível só para administradores)</span>}
+              {pode.moderar(perfil.papel) && <div><button disabled={ocupado} onClick={() => fazer(async () => { await api.apagarContato(o.id); setContato(null) }, 'Dados de contato apagados.')} className="mt-1 text-xs font-semibold text-rose-700">Apagar dados de contato</button></div>}
             </>) : <span className="text-slate-400">Anônimo ou já apagado</span>}</dd>
             <dt className="text-slate-500">Consentimento</dt><dd>{o.consentimento_em ? dataHora(o.consentimento_em) : '–'}</dd>
           </dl>
-          {temContato && ['resolvida', 'recusada'].includes(o.status) && <p className="rounded-xl bg-sky-50 p-3 text-xs text-sky-900">Pela política de privacidade, os dados de contato devem ser apagados agora que a ocorrência foi encerrada.</p>}
 
           <div className="overflow-hidden rounded-2xl border border-slate-200"><Mapa pontos={[o]} foco={[o.lat, o.lng]} className="h-48" interativo={false} /></div>
 
