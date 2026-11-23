@@ -223,6 +223,7 @@ export default function Registrar() {
                   <div><label className="label" htmlFor="tel">Telefone</label><input id="tel" className="input" value={d.contato_telefone} onChange={set('contato_telefone')} maxLength={30} inputMode="tel" autoComplete="tel" /></div>
                   <div><label className="label" htmlFor="email">E-mail</label><input id="email" type="email" className="input" value={d.contato_email} onChange={set('contato_email')} maxLength={120} autoComplete="email" /></div>
                 </div>
+                <p className="mt-2 text-xs text-slate-500">Se informar o e-mail, você recebe o protocolo e um aviso a cada mudança na situação do seu pedido. Para parar de receber, é só responder ao e-mail.</p>
                 <div className="mt-6 rounded-2xl bg-mist p-4 text-sm">
                   <div className="font-semibold">Resumo</div>
                   <div className="mt-1 text-slate-600">{CATEGORIAS[d.categoria]?.nome} · {d.bairro} · {d.rua}{foto ? ' · com foto' : ''}</div>

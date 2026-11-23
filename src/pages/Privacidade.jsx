@@ -31,7 +31,7 @@ export default function Privacidade() {
             <li>Localizar e resolver o problema informado.</li>
             <li>Mostrar o andamento da ocorrência pelo número de protocolo.</li>
             <li>Montar o mapa público e os relatórios que ajudam a Prefeitura a decidir onde agir primeiro.</li>
-            <li>Entrar em contato com você sobre a sua ocorrência, somente se você informou um contato.</li>
+            <li>Enviar o protocolo e avisos sobre a sua ocorrência, e entrar em contato com você, somente se você informou um contato.</li>
           </ul>
           <p>Não vendemos seus dados e não os usamos para propaganda.</p>
         </S>
@@ -45,6 +45,7 @@ export default function Privacidade() {
           <ul>
             <li>As ocorrências, fotos e contatos ficam guardados no Supabase, em servidores localizados em São Paulo, no Brasil.</li>
             <li>As páginas do site são entregues pelo GitHub Pages e o mapa e a lista de bairros e ruas usam serviços públicos do OpenStreetMap. Esses serviços recebem dados técnicos da conexão (como o endereço IP), mas não recebem os dados das ocorrências.</li>
+            <li>Se você informar um e-mail, ele é usado só para enviar o protocolo e os avisos sobre a sua ocorrência. O envio é feito pela Brevo, empresa de envio de e-mails que pode guardar os dados em servidores fora do Brasil, com medidas de segurança adequadas.</li>
             <li>Compartilhamos as ocorrências com a Prefeitura de Imperatriz e seus setores responsáveis (como Defesa Civil e Secretaria de Obras), para atender ao pedido.</li>
             <li>Com autoridades, quando a lei exigir.</li>
           </ul>
