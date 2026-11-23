@@ -12,11 +12,11 @@ export default function Privacidade() {
   return (
     <div className="wrap max-w-3xl py-12 sm:py-16">
       <div className="eyebrow">Transparência</div>
-      <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">Política de privacidade do Voluen Alerta</h1>
+      <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">Política de privacidade do Imperatriz em Alerta</h1>
       <p className="mt-2 text-sm text-slate-500">Última atualização: {ATUALIZADA}</p>
       <div className="mt-8 space-y-8">
         <S n="1" t="Quem somos">
-          <p>O Voluen Alerta é um canal para moradores de Imperatriz-MA avisarem sobre alagamentos, bueiros entupidos e outros problemas de drenagem. O serviço é desenvolvido pela Voluen, empresa em constituição, tendo como responsável {RESPONSAVEL}. Durante o piloto em parceria com a Prefeitura de Imperatriz, as informações são usadas pela Prefeitura para planejar e executar serviços de drenagem. A Voluen opera a plataforma seguindo as orientações da Prefeitura.</p>
+          <p>O Imperatriz em Alerta é um canal para moradores de Imperatriz-MA avisarem sobre alagamentos, bueiros entupidos e outros problemas de drenagem. O serviço é desenvolvido pela Voluen, empresa em constituição, tendo como responsável {RESPONSAVEL}. Durante o piloto em parceria com a Prefeitura de Imperatriz, as informações são usadas pela Prefeitura para planejar e executar serviços de drenagem. A Voluen opera a plataforma seguindo as orientações da Prefeitura.</p>
         </S>
         <S n="2" t="Quais dados coletamos">
           <ul>

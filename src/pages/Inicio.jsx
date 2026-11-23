@@ -19,23 +19,23 @@ export default function Inicio() {
 
   return (
     <>
-      <section className="relative overflow-hidden bg-deep text-white">
-        <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(60% 80% at 15% 20%, rgba(60,198,176,.20), transparent 60%), radial-gradient(50% 60% at 90% 90%, rgba(15,94,107,.55), transparent 70%)' }} />
+      <section className="relative overflow-hidden bg-destaque text-white">
+        <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(60% 80% at 10% 15%, rgba(7,43,90,.45), transparent 65%), repeating-radial-gradient(circle at 85% 85%, rgba(255,255,255,.07) 0 2px, transparent 2px 46px)' }} />
         <div className="wrap relative grid items-center gap-10 py-14 md:grid-cols-[1.05fr_1fr] md:py-20">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[.14em] text-accent">
-              <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Alagamentos e drenagem · Imperatriz-MA
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[.14em] text-white">
+              <span className="h-1.5 w-1.5 rounded-full bg-white" /> Alagamentos e drenagem · Imperatriz-MA
             </span>
-            <h1 className="mt-5 text-[40px] font-semibold leading-[1.05] sm:text-6xl">Viu um alagamento?<br /><span className="text-accent">Avise a cidade.</span></h1>
-            <p className="mt-5 max-w-lg text-[17px] leading-relaxed text-slate-300">Registre bueiros entupidos, ruas alagadas e riachos transbordando no seu bairro. Cada aviso ganha um protocolo e aparece no mapa, mostrando onde a ajuda é mais urgente.</p>
+            <h1 className="mt-5 text-[40px] font-semibold leading-[1.05] sm:text-6xl">Viu um alagamento?<br /><span className="underline decoration-white/60 decoration-4 underline-offset-8">Avise a cidade.</span></h1>
+            <p className="mt-5 max-w-lg text-[17px] leading-relaxed text-white/85">Registre bueiros entupidos, ruas alagadas e riachos transbordando no seu bairro. Cada aviso ganha um protocolo e aparece no mapa, mostrando onde a ajuda é mais urgente.</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/registrar" className="btn-accent px-6 py-3 text-[15px]">Registrar um problema <Icone.seta /></Link>
+              <Link to="/registrar" className="btn bg-white px-6 py-3 text-[15px] text-brand hover:bg-brand-50">Registrar um problema <Icone.seta /></Link>
               <Link to="/mapa" className="btn-ghost-dark px-6 py-3 text-[15px]"><Icone.pin /> Ver o mapa</Link>
             </div>
-            <ul className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-slate-400">
-              <li className="flex items-center gap-1.5"><Icone.escudo className="text-accent" /> Pode ser anônimo</li>
-              <li className="flex items-center gap-1.5"><Icone.relogio className="text-accent" /> Leva menos de 2 minutos</li>
-              <li className="flex items-center gap-1.5"><Icone.doc width="16" height="16" className="text-accent" /> Acompanhamento por protocolo</li>
+            <ul className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-[13px] text-white/80">
+              <li className="flex items-center gap-1.5"><Icone.escudo className="text-white" /> Pode ser anônimo</li>
+              <li className="flex items-center gap-1.5"><Icone.relogio className="text-white" /> Leva menos de 2 minutos</li>
+              <li className="flex items-center gap-1.5"><Icone.doc width="16" height="16" className="text-white" /> Acompanhamento por protocolo</li>
             </ul>
           </div>
           <div className="relative">

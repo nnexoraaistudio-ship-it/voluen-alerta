@@ -229,7 +229,7 @@ export default function Registrar() {
                   <div className="mt-1 text-slate-600">{CATEGORIAS[d.categoria]?.nome} · {d.bairro} · {d.rua}{foto ? ' · com foto' : ''}</div>
                 </div>
                 <label className="mt-5 flex items-start gap-3 text-sm leading-relaxed">
-                  <input id="aceite" type="checkbox" checked={aceite} onChange={(e) => setAceite(e.target.checked)} className="mt-1 h-5 w-5 shrink-0 accent-[#0F5E6B]" />
+                  <input id="aceite" type="checkbox" checked={aceite} onChange={(e) => setAceite(e.target.checked)} className="mt-1 h-5 w-5 shrink-0 accent-[#0B4DA2]" />
                   <span>Li e concordo com a <Link to="/privacidade" target="_blank" className="font-semibold text-brand underline">Política de privacidade</Link>. Entendo que o local, a descrição e a foto da ocorrência poderão aparecer no mapa público, sem o meu nome.</span>
                 </label>
               </div>

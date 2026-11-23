@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Logo, Icone } from './ui'
+import { VoluenMarca } from './Marca'
 import { MODO_DEMO, CONTATO_EMAIL } from '../config'
 
 const NAV = [
@@ -13,7 +14,7 @@ function Topo() {
   return (
     <header className="sticky top-0 z-[1000] border-b border-slate-200/70 bg-white/85 backdrop-blur-md" style={{ paddingTop: 'env(safe-area-inset-top)' }}>
       <div className="wrap flex h-16 items-center justify-between gap-4">
-        <Link to="/" aria-label="Voluen Alerta, início"><Logo /></Link>
+        <Link to="/" aria-label="Imperatriz em Alerta, início"><Logo /></Link>
         <nav className="hidden items-center gap-1 md:flex">
           {NAV.map((n) => (
             <NavLink key={n.to} to={n.to} end={n.fim} className={({ isActive }) => `rounded-full px-4 py-2 text-sm font-medium transition ${isActive ? 'bg-brand-50 text-brand' : 'text-slate-600 hover:text-deep'}`}>{n.nome}</NavLink>
@@ -71,7 +72,7 @@ function Rodape() {
       </div>
       <div className="border-t border-white/10">
         <div className="wrap flex flex-col gap-2 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <span>Desenvolvido pela Voluen · Tecnologia para cidades que evoluem. © 2026 Voluen</span>
+          <span className="flex flex-wrap items-center gap-x-2 gap-y-1">Desenvolvido por <VoluenMarca claro className="h-3.5 w-auto opacity-90" /> · Tecnologia para cidades que evoluem. © 2026 Voluen</span>
           <span className="flex gap-4"><Link to="/privacidade" className="hover:text-slate-300">Privacidade</Link><Link to="/equipe" className="hover:text-slate-300">Acesso da equipe</Link></span>
         </div>
       </div>

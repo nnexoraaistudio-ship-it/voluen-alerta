@@ -54,7 +54,7 @@ export default function Relatorio() {
     <div className="mx-auto max-w-4xl space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <div className="text-xs font-semibold uppercase tracking-[.14em] text-brand">Relatório mensal · Voluen Alerta · Prefeitura de Imperatriz</div>
+          <div className="text-xs font-semibold uppercase tracking-[.14em] text-brand">Relatório mensal · Imperatriz em Alerta · Prefeitura de Imperatriz</div>
           <h1 className="mt-1 text-2xl font-semibold capitalize">{nomeMes}</h1>
         </div>
         <div className="no-print flex gap-2">
@@ -81,7 +81,7 @@ export default function Relatorio() {
         <svg viewBox="0 0 520 190" className="w-full" role="img" aria-label="Gráfico de ocorrências por semana">
           {[0, 0.5, 1].map((f) => <g key={f}><line x1="36" x2="520" y1={10 + 140 - f * 140} y2={10 + 140 - f * 140} stroke="#E2E8F0" /><text x="28" y={14 + 140 - f * 140} textAnchor="end" fontSize="11" fill="#64748B">{Math.round(f * maxS)}</text></g>)}
           {semanas.map((v, i) => { const h = (v / maxS) * 140; const x = 56 + i * 94; return (
-            <g key={i}><rect x={x} y={150 - h} width="58" height={h} rx="5" fill="#0F5E6B" />{v > 0 && <text x={x + 29} y={144 - h} textAnchor="middle" fontSize="12" fontWeight="700" fill="#0B2E3A">{v}</text>}<text x={x + 29} y="172" textAnchor="middle" fontSize="11" fill="#64748B">{rotSem[i]}</text></g>) })}
+            <g key={i}><rect x={x} y={150 - h} width="58" height={h} rx="5" fill="#0B4DA2" />{v > 0 && <text x={x + 29} y={144 - h} textAnchor="middle" fontSize="12" fontWeight="700" fill="#072B5A">{v}</text>}<text x={x + 29} y="172" textAnchor="middle" fontSize="11" fill="#64748B">{rotSem[i]}</text></g>) })}
         </svg>
       </section>
 

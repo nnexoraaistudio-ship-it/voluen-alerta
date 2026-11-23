@@ -4,17 +4,18 @@ export default {
   theme: {
     extend: {
       colors: {
-        brand: { DEFAULT: '#0F5E6B', 50: '#E8F3F4', 100: '#CFE6E9', 600: '#0F5E6B', 700: '#0C4D58', 800: '#0B3D47' },
-        deep: { DEFAULT: '#0B2E3A', 900: '#071E26', 800: '#0B2E3A', 700: '#123C4A' },
-        accent: { DEFAULT: '#3CC6B0', 50: '#E7F8F5', 600: '#2BAE99' },
-        mist: '#F2F5F6',
+        brand: { DEFAULT: '#0B4DA2', 50: '#EAF1FB', 100: '#D3E2F6', 600: '#0B4DA2', 700: '#093F86', 800: '#07326A' },
+        deep: { DEFAULT: '#072B5A', 900: '#051E40', 800: '#072B5A', 700: '#0C3A73' },
+        accent: { DEFAULT: '#2BB3E6', 50: '#E6F6FC', 600: '#1A9CCF' },
+        mist: '#F3F6FA',
       },
       fontFamily: {
-        display: ['Sora', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Outfit', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'],
       },
-      boxShadow: { soft: '0 1px 2px rgba(11,46,58,.04), 0 8px 24px rgba(11,46,58,.06)' },
+      backgroundImage: { destaque: 'linear-gradient(135deg, #0B4DA2 0%, #1A7FCB 60%, #2BB3E6 100%)' },
+      boxShadow: { soft: '0 1px 2px rgba(7,43,90,.04), 0 8px 24px rgba(7,43,90,.06)' },
     },
   },
   plugins: [],

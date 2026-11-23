@@ -48,8 +48,8 @@ export default function Mapa({ pontos = [], escolha, onPick, foco, linhas = [], 
           </Popup>
         </Marker>
       ))}
-      {linhas.length > 0 && <Polyline positions={linhas} pathOptions={{ color: '#3CC6B0', weight: 7, opacity: 0.85 }} />}
-      {escolha && <Marker position={escolha} icon={iconeDe('#0F5E6B', true)} />}
+      {linhas.length > 0 && <Polyline positions={linhas} pathOptions={{ color: '#2BB3E6', weight: 7, opacity: 0.85 }} />}
+      {escolha && <Marker position={escolha} icon={iconeDe('#0B4DA2', true)} />}
     </MapContainer>
   )
 }
