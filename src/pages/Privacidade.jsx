@@ -44,7 +44,7 @@ export default function Privacidade() {
         <S n="6" t="Onde os dados ficam e com quem compartilhamos">
           <ul>
             <li>As ocorrências, fotos e contatos ficam guardados no Supabase, em servidores localizados em São Paulo, no Brasil.</li>
-            <li>As páginas do site são entregues pelo GitHub Pages e o mapa usa imagens do OpenStreetMap. Esses serviços recebem dados técnicos da conexão (como o endereço IP), mas não recebem os dados das ocorrências.</li>
+            <li>As páginas do site são entregues pelo GitHub Pages e o mapa e a lista de bairros e ruas usam serviços públicos do OpenStreetMap. Esses serviços recebem dados técnicos da conexão (como o endereço IP), mas não recebem os dados das ocorrências.</li>
             <li>Compartilhamos as ocorrências com a Prefeitura de Imperatriz e seus setores responsáveis (como Defesa Civil e Secretaria de Obras), para atender ao pedido.</li>
             <li>Com autoridades, quando a lei exigir.</li>
           </ul>

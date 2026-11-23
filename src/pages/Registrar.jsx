@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
-import { CATEGORIAS, BAIRROS } from '../lib/constants'
+import { CATEGORIAS } from '../lib/constants'
 import { comprimirFoto } from '../lib/imagem'
-import { localizar } from '../lib/endereco'
+import { carregarBairros, acharBairro, ruasDoBairro, pontoDaRua, localizarTexto, normalizar } from '../lib/endereco'
 import Mapa from '../components/Mapa'
 import { Icone, CatDot } from '../components/ui'
 
@@ -19,8 +19,52 @@ export default function Registrar() {
   const [erro, setErro] = useState('')
   const [feito, setFeito] = useState(null)
   const [gps, setGps] = useState('')
-  const [buscado, setBuscado] = useState('')
+  const [bairros, setBairros] = useState([])
+  const [bairroInfo, setBairroInfo] = useState(null)
+  const [ruas, setRuas] = useState(null)
+  const [linhas, setLinhas] = useState([])
+  const [foco, setFoco] = useState(null)
+  const bairroAtual = useRef('')
   const set = (k) => (e) => setD({ ...d, [k]: e.target ? e.target.value : e })
+
+  useEffect(() => { if (etapa === 1 && !bairros.length) carregarBairros().then(setBairros) }, [etapa]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function mudarBairro(valor) {
+    bairroAtual.current = valor
+    setD((x) => ({ ...x, bairro: valor, rua: '', lat: null, lng: null }))
+    setLinhas([]); setRuas(null); setBairroInfo(null)
+    const b = await acharBairro(valor).catch(() => null)
+    if (!b || bairroAtual.current !== valor) return
+    setBairroInfo(b); setFoco([b.lat, b.lng])
+    setGps('Carregando as ruas do bairro…')
+    try {
+      const lista = await ruasDoBairro(b)
+      if (bairroAtual.current !== valor) return
+      setRuas(lista)
+      setGps(lista.length ? `Agora escolha a rua (${lista.length} ruas encontradas em ${b.nome}).` : 'Não achamos as ruas desse bairro. Digite a rua e toque no mapa no local exato.')
+    } catch { setRuas([]); setGps('A lista de ruas não respondeu. Digite a rua e toque no mapa no local exato.') }
+  }
+
+  function mudarRua(valor) {
+    const r = ruas?.find((x) => normalizar(x.nome) === normalizar(valor))
+    if (!r) { setD((x) => ({ ...x, rua: valor })); setLinhas([]); return }
+    const centro = bairroInfo ? [bairroInfo.lat, bairroInfo.lng] : r.linhas[0][0]
+    const [lat, lng] = pontoDaRua(r, centro)
+    setD((x) => ({ ...x, rua: r.nome, lat, lng }))
+    setLinhas(r.linhas); setFoco([lat, lng])
+    setGps('A rua está destacada no mapa. Toque no ponto exato do problema para ajustar o pino.')
+  }
+
+  async function ruaDigitada() {
+    if (!d.rua.trim() || d.lat != null || linhas.length) return
+    setGps('Procurando a rua perto do bairro…')
+    try {
+      const r = await localizarTexto(d.rua.trim(), bairroInfo)
+      if (!r) { setGps('Não encontramos essa rua. Toque no mapa no local exato do problema.'); return }
+      setD((x) => ({ ...x, lat: r.lat, lng: r.lng })); setFoco([r.lat, r.lng])
+      setGps('Confira o ponto e toque no mapa para ajustar ao local exato.')
+    } catch { setGps('A busca não respondeu. Toque no mapa no local exato do problema.') }
+  }
 
   const valido = [
     !!d.categoria,
@@ -46,22 +90,6 @@ export default function Registrar() {
       () => setGps('Não foi possível pegar a localização. Toque no mapa para marcar.'),
       { enableHighAccuracy: true, timeout: 10000 },
     )
-  }
-
-  async function buscarEndereco(forcar) {
-    const chave = `${d.rua.trim()}|${d.bairro.trim()}`
-    if (!d.rua.trim() && !d.bairro.trim()) return
-    if (!forcar && (chave === buscado || d.lat != null)) return
-    setBuscado(chave)
-    setGps('Procurando o endereço no mapa…')
-    try {
-      const r = await localizar(d.rua.trim(), d.bairro.trim())
-      if (!r) { setGps('Não encontramos esse endereço. Toque no mapa para marcar o local.'); return }
-      setD((x) => ({ ...x, lat: r.lat, lng: r.lng }))
-      setGps(r.precisao === 'rua'
-        ? 'Encontramos a rua. Confira o ponto e toque no mapa para ajustar ao local exato.'
-        : 'Encontramos o bairro, mas não a rua. Toque no mapa no local exato do problema.')
-    } catch { setGps('A busca de endereço não respondeu. Toque no mapa para marcar o local.') }
   }
 
   async function enviar() {
@@ -118,12 +146,13 @@ export default function Registrar() {
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="label" htmlFor="bairro">Bairro *</label>
-                    <input id="bairro" className="input" list="bairros" value={d.bairro} onChange={set('bairro')} placeholder="Digite ou escolha o bairro" autoComplete="off" />
-                    <datalist id="bairros">{BAIRROS.map((b) => <option key={b} value={b} />)}</datalist>
+                    <input id="bairro" className="input" list="bairros" value={d.bairro} onChange={(e) => mudarBairro(e.target.value)} placeholder="Digite ou escolha o bairro" autoComplete="off" maxLength={80} />
+                    <datalist id="bairros">{bairros.map((b) => <option key={b.nome} value={b.nome} />)}</datalist>
                   </div>
                   <div>
                     <label className="label" htmlFor="rua">Rua ou avenida *</label>
-                    <input id="rua" className="input" value={d.rua} onChange={set('rua')} onBlur={() => buscarEndereco(false)} placeholder="Ex.: Rua Ceará" maxLength={120} />
+                    <input id="rua" className="input" list="ruas" value={d.rua} onChange={(e) => mudarRua(e.target.value)} onBlur={ruaDigitada} placeholder={ruas?.length ? 'Escolha ou digite a rua' : 'Ex.: Rua Ceará'} autoComplete="off" maxLength={120} disabled={!d.bairro.trim()} />
+                    <datalist id="ruas">{(ruas || []).map((r) => <option key={r.nome} value={r.nome} />)}</datalist>
                   </div>
                   <div className="sm:col-span-2">
                     <label className="label" htmlFor="ref">Ponto de referência</label>
@@ -133,14 +162,13 @@ export default function Registrar() {
                 <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
                   <span className="label !mb-0">Marque no mapa *</span>
                   <span className="flex flex-wrap gap-2">
-                    <button type="button" onClick={() => buscarEndereco(true)} disabled={!d.rua.trim() && !d.bairro.trim()} className="btn-ghost !py-1.5 text-xs"><Icone.busca /> Achar endereço no mapa</button>
-                    <button type="button" onClick={minhaLocalizacao} className="btn-ghost !py-1.5 text-xs"><Icone.pin /> Usar minha localização</button>
+                                        <button type="button" onClick={minhaLocalizacao} className="btn-ghost !py-1.5 text-xs"><Icone.pin /> Usar minha localização</button>
                   </span>
                 </div>
                 <div className="mt-2 overflow-hidden rounded-2xl border border-slate-200">
-                  <Mapa escolha={d.lat != null ? [d.lat, d.lng] : null} onPick={([lat, lng]) => setD({ ...d, lat, lng })} className="h-[300px]" />
+                  <Mapa escolha={d.lat != null ? [d.lat, d.lng] : null} onPick={([lat, lng]) => setD({ ...d, lat, lng })} foco={foco} linhas={linhas} className="h-[320px]" />
                 </div>
-                <p className="mt-2 text-xs text-slate-500">{gps || (d.lat != null ? 'Ponto marcado. Toque em outro lugar do mapa para ajustar.' : 'Digite a rua e o mapa vai até ela. Depois toque no local exato do problema.')}</p>
+                <p className="mt-2 text-xs text-slate-500">{gps || (d.lat != null ? 'Ponto marcado. Toque em outro lugar do mapa para ajustar.' : 'Escolha o bairro: o mapa vai até ele e mostra a lista de ruas.')}</p>
               </div>
             )}
 

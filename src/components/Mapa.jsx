@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { CATEGORIAS } from '../lib/constants'
@@ -25,7 +25,7 @@ function Voar({ alvo, zoom }) {
   return null
 }
 
-export default function Mapa({ pontos = [], escolha, onPick, foco, className = 'h-[420px]', zoom = 13, interativo = true }) {
+export default function Mapa({ pontos = [], escolha, onPick, foco, linhas = [], className = 'h-[420px]', zoom = 13, interativo = true }) {
   return (
     <MapContainer center={escolha || CENTRO_MAPA} zoom={escolha ? 16 : zoom} minZoom={11} maxBounds={LIMITES} scrollWheelZoom={interativo} dragging={interativo} className={`w-full ${className}`}>
       <TileLayer
@@ -48,6 +48,7 @@ export default function Mapa({ pontos = [], escolha, onPick, foco, className = '
           </Popup>
         </Marker>
       ))}
+      {linhas.length > 0 && <Polyline positions={linhas} pathOptions={{ color: '#3CC6B0', weight: 7, opacity: 0.85 }} />}
       {escolha && <Marker position={escolha} icon={iconeDe('#0F5E6B', true)} />}
     </MapContainer>
   )
