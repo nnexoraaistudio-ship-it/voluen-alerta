@@ -29,8 +29,9 @@ export default function Mapa({ pontos = [], escolha, onPick, foco, className = '
   return (
     <MapContainer center={escolha || CENTRO_MAPA} zoom={escolha ? 16 : zoom} minZoom={11} maxBounds={LIMITES} scrollWheelZoom={interativo} dragging={interativo} className={`w-full ${className}`}>
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        maxZoom={19}
       />
       <Clique onPick={onPick} />
       <Voar alvo={foco || escolha} />
