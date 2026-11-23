@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import { CATEGORIAS, BAIRROS } from '../lib/constants'
 import { comprimirFoto } from '../lib/imagem'
+import { localizar } from '../lib/endereco'
 import Mapa from '../components/Mapa'
 import { Icone, CatDot } from '../components/ui'
 
@@ -18,6 +19,7 @@ export default function Registrar() {
   const [erro, setErro] = useState('')
   const [feito, setFeito] = useState(null)
   const [gps, setGps] = useState('')
+  const [buscado, setBuscado] = useState('')
   const set = (k) => (e) => setD({ ...d, [k]: e.target ? e.target.value : e })
 
   const valido = [
@@ -44,6 +46,22 @@ export default function Registrar() {
       () => setGps('Não foi possível pegar a localização. Toque no mapa para marcar.'),
       { enableHighAccuracy: true, timeout: 10000 },
     )
+  }
+
+  async function buscarEndereco(forcar) {
+    const chave = `${d.rua.trim()}|${d.bairro.trim()}`
+    if (!d.rua.trim() && !d.bairro.trim()) return
+    if (!forcar && (chave === buscado || d.lat != null)) return
+    setBuscado(chave)
+    setGps('Procurando o endereço no mapa…')
+    try {
+      const r = await localizar(d.rua.trim(), d.bairro.trim())
+      if (!r) { setGps('Não encontramos esse endereço. Toque no mapa para marcar o local.'); return }
+      setD((x) => ({ ...x, lat: r.lat, lng: r.lng }))
+      setGps(r.precisao === 'rua'
+        ? 'Encontramos a rua. Confira o ponto e toque no mapa para ajustar ao local exato.'
+        : 'Encontramos o bairro, mas não a rua. Toque no mapa no local exato do problema.')
+    } catch { setGps('A busca de endereço não respondeu. Toque no mapa para marcar o local.') }
   }
 
   async function enviar() {
@@ -105,7 +123,7 @@ export default function Registrar() {
                   </div>
                   <div>
                     <label className="label" htmlFor="rua">Rua ou avenida *</label>
-                    <input id="rua" className="input" value={d.rua} onChange={set('rua')} placeholder="Ex.: Rua Ceará" maxLength={120} />
+                    <input id="rua" className="input" value={d.rua} onChange={set('rua')} onBlur={() => buscarEndereco(false)} placeholder="Ex.: Rua Ceará" maxLength={120} />
                   </div>
                   <div className="sm:col-span-2">
                     <label className="label" htmlFor="ref">Ponto de referência</label>
@@ -114,12 +132,15 @@ export default function Registrar() {
                 </div>
                 <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
                   <span className="label !mb-0">Marque no mapa *</span>
-                  <button type="button" onClick={minhaLocalizacao} className="btn-ghost !py-1.5 text-xs"><Icone.pin /> Usar minha localização</button>
+                  <span className="flex flex-wrap gap-2">
+                    <button type="button" onClick={() => buscarEndereco(true)} disabled={!d.rua.trim() && !d.bairro.trim()} className="btn-ghost !py-1.5 text-xs"><Icone.busca /> Achar endereço no mapa</button>
+                    <button type="button" onClick={minhaLocalizacao} className="btn-ghost !py-1.5 text-xs"><Icone.pin /> Usar minha localização</button>
+                  </span>
                 </div>
                 <div className="mt-2 overflow-hidden rounded-2xl border border-slate-200">
                   <Mapa escolha={d.lat != null ? [d.lat, d.lng] : null} onPick={([lat, lng]) => setD({ ...d, lat, lng })} className="h-[300px]" />
                 </div>
-                <p className="mt-2 text-xs text-slate-500">{gps || (d.lat != null ? 'Ponto marcado. Toque em outro lugar do mapa para ajustar.' : 'Toque no mapa no local exato do problema.')}</p>
+                <p className="mt-2 text-xs text-slate-500">{gps || (d.lat != null ? 'Ponto marcado. Toque em outro lugar do mapa para ajustar.' : 'Digite a rua e o mapa vai até ela. Depois toque no local exato do problema.')}</p>
               </div>
             )}
 
