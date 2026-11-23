@@ -15,7 +15,7 @@ async function overpass(q) {
   let ultimoErro
   for (const url of OVERPASS) {
     try {
-      const r = await fetch(url, { method: 'POST', body: new URLSearchParams({ data: q }) })
+      const r = await fetch(url, { method: 'POST', body: new URLSearchParams({ data: q }), signal: AbortSignal.timeout(20000) })
       if (!r.ok) throw new Error('overpass ' + r.status)
       return (await r.json()).elements || []
     } catch (e) { ultimoErro = e }
@@ -25,6 +25,8 @@ async function overpass(q) {
 
 const lerCache = (k) => { try { return JSON.parse(sessionStorage.getItem(k)) } catch { return null } }
 const gravarCache = (k, v) => { try { sessionStorage.setItem(k, JSON.stringify(v)) } catch { /* sem cache */ } }
+
+export const bairrosFixos = () => BAIRROS.map((nome) => ({ nome, lat: null, lng: null, area: null }))
 
 // Lista de bairros: os do OpenStreetMap (com posição) + a nossa lista fixa (sem posição).
 let bairrosPromessa

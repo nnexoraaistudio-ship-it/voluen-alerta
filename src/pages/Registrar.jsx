@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import { CATEGORIAS } from '../lib/constants'
 import { comprimirFoto } from '../lib/imagem'
-import { carregarBairros, acharBairro, ruasDoBairro, pontoDaRua, localizarTexto, normalizar } from '../lib/endereco'
+import { bairrosFixos, carregarBairros, acharBairro, ruasDoBairro, pontoDaRua, localizarTexto, normalizar } from '../lib/endereco'
 import Mapa from '../components/Mapa'
 import { Icone, CatDot } from '../components/ui'
 
@@ -19,7 +19,9 @@ export default function Registrar() {
   const [erro, setErro] = useState('')
   const [feito, setFeito] = useState(null)
   const [gps, setGps] = useState('')
-  const [bairros, setBairros] = useState([])
+  const [bairros, setBairros] = useState(bairrosFixos)
+  const [bairroManual, setBairroManual] = useState(false)
+  const [ruaManual, setRuaManual] = useState(false)
   const [bairroInfo, setBairroInfo] = useState(null)
   const [ruas, setRuas] = useState(null)
   const [linhas, setLinhas] = useState([])
@@ -27,12 +29,12 @@ export default function Registrar() {
   const bairroAtual = useRef('')
   const set = (k) => (e) => setD({ ...d, [k]: e.target ? e.target.value : e })
 
-  useEffect(() => { if (etapa === 1 && !bairros.length) carregarBairros().then(setBairros) }, [etapa]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (etapa === 1) carregarBairros().then(setBairros) }, [etapa]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function mudarBairro(valor) {
     bairroAtual.current = valor
     setD((x) => ({ ...x, bairro: valor, rua: '', lat: null, lng: null }))
-    setLinhas([]); setRuas(null); setBairroInfo(null)
+    setLinhas([]); setRuas(null); setBairroInfo(null); setRuaManual(false)
     const b = await acharBairro(valor).catch(() => null)
     if (!b || bairroAtual.current !== valor) return
     setBairroInfo(b); setFoco([b.lat, b.lng])
@@ -41,8 +43,9 @@ export default function Registrar() {
       const lista = await ruasDoBairro(b)
       if (bairroAtual.current !== valor) return
       setRuas(lista)
+      if (!lista.length) setRuaManual(true)
       setGps(lista.length ? `Agora escolha a rua (${lista.length} ruas encontradas em ${b.nome}).` : 'Não achamos as ruas desse bairro. Digite a rua e toque no mapa no local exato.')
-    } catch { setRuas([]); setGps('A lista de ruas não respondeu. Digite a rua e toque no mapa no local exato.') }
+    } catch { setRuas([]); setRuaManual(true); setGps('A lista de ruas não respondeu. Digite a rua e toque no mapa no local exato.') }
   }
 
   function mudarRua(valor) {
@@ -146,13 +149,28 @@ export default function Registrar() {
                 <div className="mt-5 grid gap-4 sm:grid-cols-2">
                   <div>
                     <label className="label" htmlFor="bairro">Bairro *</label>
-                    <input id="bairro" className="input" list="bairros" value={d.bairro} onChange={(e) => mudarBairro(e.target.value)} placeholder="Digite ou escolha o bairro" autoComplete="off" maxLength={80} />
-                    <datalist id="bairros">{bairros.map((b) => <option key={b.nome} value={b.nome} />)}</datalist>
+                    <select id="bairro" className="input" value={bairroManual ? '__outro' : d.bairro}
+                      onChange={(e) => { const v = e.target.value; if (v === '__outro') { setBairroManual(true); mudarBairro('') } else { setBairroManual(false); mudarBairro(v) } }}>
+                      <option value="" disabled>Escolha o bairro</option>
+                      {bairros.map((b) => <option key={b.nome} value={b.nome}>{b.nome}</option>)}
+                      <option value="__outro">Meu bairro não está na lista</option>
+                    </select>
+                    {bairroManual && <input className="input mt-2" value={d.bairro} onChange={(e) => mudarBairro(e.target.value)} placeholder="Digite o nome do bairro" maxLength={80} autoFocus />}
                   </div>
                   <div>
                     <label className="label" htmlFor="rua">Rua ou avenida *</label>
-                    <input id="rua" className="input" list="ruas" value={d.rua} onChange={(e) => mudarRua(e.target.value)} onBlur={ruaDigitada} placeholder={ruas?.length ? 'Escolha ou digite a rua' : 'Ex.: Rua Ceará'} autoComplete="off" maxLength={120} disabled={!d.bairro.trim()} />
-                    <datalist id="ruas">{(ruas || []).map((r) => <option key={r.nome} value={r.nome} />)}</datalist>
+                    {ruas?.length > 0 && (
+                      <select id="rua" className="input" value={ruaManual ? '__outro' : d.rua}
+                        onChange={(e) => { const v = e.target.value; if (v === '__outro') { setRuaManual(true); setLinhas([]); setD((x) => ({ ...x, rua: '', lat: null, lng: null })) } else { setRuaManual(false); mudarRua(v) } }}>
+                        <option value="" disabled>Escolha a rua</option>
+                        {ruas.map((r) => <option key={r.nome} value={r.nome}>{r.nome}</option>)}
+                        <option value="__outro">Minha rua não está na lista</option>
+                      </select>
+                    )}
+                    {(!ruas?.length || ruaManual) && (
+                      <input id={ruas?.length ? undefined : 'rua'} className={`input ${ruas?.length ? 'mt-2' : ''}`} value={d.rua} onChange={(e) => setD((x) => ({ ...x, rua: e.target.value }))} onBlur={ruaDigitada}
+                        placeholder={!d.bairro.trim() ? 'Escolha o bairro primeiro' : ruas === null && !bairroManual ? 'Carregando as ruas…' : 'Digite o nome da rua'} maxLength={120} disabled={!d.bairro.trim()} />
+                    )}
                   </div>
                   <div className="sm:col-span-2">
                     <label className="label" htmlFor="ref">Ponto de referência</label>
