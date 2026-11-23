@@ -108,6 +108,12 @@ drop policy if exists "admin muda papéis" on public.perfis;
 create policy "admin muda papéis" on public.perfis
   for update to authenticated using (public.meu_papel() = 'admin');
 
+-- Permissões explícitas (funcionam mesmo com "Grant API access automatically" desligado).
+grant usage on schema public to anon, authenticated;
+grant select, delete on public.ocorrencias to authenticated;
+grant select on public.historico to authenticated;
+grant select, update (papel) on public.perfis to authenticated;
+
 -- Impede que a equipe mude colunas sensíveis por fora das funções.
 revoke update on public.ocorrencias from authenticated;
 grant update (foto_path, contato_nome, contato_telefone, contato_email) on public.ocorrencias to authenticated;
