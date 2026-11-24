@@ -1,6 +1,6 @@
 import { CONTATO_EMAIL, RESPONSAVEL } from '../config'
 
-const ATUALIZADA = '23 de novembro de 2026'
+const ATUALIZADA = '24 de novembro de 2026'
 const S = ({ n, t, children }) => (
   <section className="border-t border-slate-200 pt-6">
     <h2 className="text-xl font-semibold">{n}. {t}</h2>
@@ -16,7 +16,7 @@ export default function Privacidade() {
       <p className="mt-2 text-sm text-slate-500">Última atualização: {ATUALIZADA}</p>
       <div className="mt-8 space-y-8">
         <S n="1" t="Quem somos">
-          <p>O Imperatriz em Alerta é um canal para moradores de Imperatriz-MA avisarem sobre alagamentos, bueiros entupidos e outros problemas de drenagem. O serviço é desenvolvido pela Voluen, empresa em constituição, tendo como responsável {RESPONSAVEL}. Durante o piloto em parceria com a Prefeitura de Imperatriz, as informações são usadas pela Prefeitura para planejar e executar serviços de drenagem. A Voluen opera a plataforma seguindo as orientações da Prefeitura.</p>
+          <p>O Imperatriz em Alerta é um canal para moradores de Imperatriz-MA avisarem sobre alagamentos, bueiros entupidos e outros problemas de drenagem. O serviço é desenvolvido pela Voluen, empresa em constituição, tendo como responsável {RESPONSAVEL}. Nesta fase de testes, o site ainda não é um canal oficial da Prefeitura de Imperatriz. Se for firmada uma parceria, as informações passarão a ser usadas pela Prefeitura para planejar e executar serviços de drenagem, e esta política será atualizada antes disso.</p>
         </S>
         <S n="2" t="Quais dados coletamos">
           <ul>
@@ -37,7 +37,7 @@ export default function Privacidade() {
           <p>Não vendemos seus dados e não os usamos para propaganda.</p>
         </S>
         <S n="4" t="Base legal">
-          <p>Usamos os dados com base no seu consentimento, dado ao marcar a caixa antes de enviar a ocorrência, e na execução de políticas públicas pela Prefeitura, conforme a Lei Geral de Proteção de Dados (Lei nº 13.709/2018).</p>
+          <p>Usamos os dados com base no seu consentimento, dado ao marcar a caixa antes de enviar a ocorrência, e, caso seja firmada uma parceria com a Prefeitura, na execução de políticas públicas, conforme a Lei Geral de Proteção de Dados (Lei nº 13.709/2018).</p>
         </S>
         <S n="5" t="O que fica público">
           <p>No mapa e na consulta de protocolo aparecem apenas o tipo, o bairro, a rua, o local aproximado, a descrição, a foto e a situação da ocorrência. Seu nome, telefone e e-mail nunca são publicados. Toda ocorrência passa por moderação antes de aparecer no mapa. Fotos que mostrem o rosto de pessoas ou placas de veículos podem ser removidas. Por isso, evite esse tipo de foto e não escreva dados pessoais na descrição.</p>
@@ -47,7 +47,7 @@ export default function Privacidade() {
             <li>As ocorrências, fotos e contatos ficam guardados no Supabase, em servidores localizados em São Paulo, no Brasil.</li>
             <li>As páginas do site são entregues pelo GitHub Pages e o mapa e a lista de bairros e ruas usam serviços públicos do OpenStreetMap. Esses serviços recebem dados técnicos da conexão (como o endereço IP), mas não recebem os dados das ocorrências.</li>
             <li>Se você informar um e-mail, ele é usado só para enviar o protocolo e os avisos sobre a sua ocorrência. O envio é feito pela Brevo, empresa de envio de e-mails que pode guardar os dados em servidores fora do Brasil, com medidas de segurança adequadas.</li>
-            <li>Compartilhamos as ocorrências com a Prefeitura de Imperatriz e seus setores responsáveis (como Defesa Civil e Secretaria de Obras), para atender ao pedido.</li>
+            <li>Se for firmada uma parceria com a Prefeitura de Imperatriz, as ocorrências serão compartilhadas com ela e seus setores responsáveis (como Defesa Civil e Secretaria de Obras), para atender ao pedido.</li>
             <li>Com autoridades, quando a lei exigir.</li>
           </ul>
         </S>
