@@ -53,7 +53,7 @@ export default function Acompanhar() {
         <div className="eyebrow">Acompanhar ocorrência</div>
         <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">Consulte o seu protocolo</h1>
         <p className="mt-2 text-slate-600">Digite o número recebido no fim do registro para ver a situação e cada etapa do atendimento.</p>
-        <form onSubmit={buscar} className="mt-6 flex gap-2">
+        <form onSubmit={buscar} className="mt-6 flex flex-col gap-2 sm:flex-row">
           <label htmlFor="prot" className="sr-only">Número do protocolo</label>
           <input id="prot" className="input font-mono uppercase" value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Ex.: VA-2026-01180-4F2A" />
           <button className="btn-brand shrink-0 px-6"><Icone.busca /> Consultar</button>

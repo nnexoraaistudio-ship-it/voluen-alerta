@@ -253,7 +253,7 @@ export default function Registrar() {
 
           {erro && <div className="mt-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-800" role="alert">{erro}</div>}
 
-          <div className="mt-8 flex items-center justify-between border-t border-slate-100 pt-5">
+          <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-[1001] -mx-5 mt-8 flex items-center justify-between border-t border-slate-100 bg-white/95 px-5 py-3 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:px-0 sm:pb-0 sm:pt-5 sm:backdrop-blur-none">
             <button type="button" onClick={() => setEtapa(etapa - 1)} disabled={etapa === 0} className="btn text-slate-500 hover:text-deep disabled:invisible"><Icone.voltar /> Voltar</button>
             {etapa < 4
               ? <button type="button" onClick={() => setEtapa(etapa + 1)} disabled={!valido} className="btn-brand px-6">{etapa === 2 && !foto ? 'Pular' : 'Continuar'} <Icone.seta /></button>
