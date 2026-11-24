@@ -16,7 +16,7 @@ export const CENTRO_MAPA = [-5.5235, -47.4735]
 // Avisos por e-mail ao morador (Brevo). Enquanto estiver false, o site NÃO promete
 // enviar e-mails. Quando os avisos forem ligados no banco (supabase/notificacoes.sql),
 // troque para true e publique de novo: o texto do registro volta a prometer os avisos.
-export const AVISOS_EMAIL_LIGADOS = false
+export const AVISOS_EMAIL_LIGADOS = true
 
 // Telefones de emergência mostrados no site.
 export const TEL_DEFESA_CIVIL = '199'
