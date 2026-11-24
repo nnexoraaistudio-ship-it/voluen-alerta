@@ -87,10 +87,14 @@ function AvisoPrivacidade() {
   if (!visivel) return null
   const ok = () => { try { localStorage.setItem(CHAVE_AVISO, new Date().toISOString()) } catch { /* nada */ } setVisivel(false) }
   return (
-    <div className="fixed inset-x-3 bottom-[76px] z-[1100] mx-auto max-w-2xl md:bottom-5 no-print" role="region" aria-label="Aviso de privacidade">
-      <div className="flex flex-col gap-3 rounded-2xl bg-deep p-4 text-sm text-slate-200 shadow-2xl sm:flex-row sm:items-center">
-        <p className="flex-1 leading-relaxed">Este site não usa cookies de propaganda nem de rastreamento. Guardamos no seu navegador só o necessário para ele funcionar. Saiba mais na <Link to="/privacidade" className="font-semibold text-accent underline">Política de privacidade</Link>.</p>
-        <button onClick={ok} className="btn-accent shrink-0">Entendi</button>
+    <div className="fixed inset-x-2 bottom-[72px] z-[1100] mx-auto max-w-2xl md:bottom-5 no-print" role="region" aria-label="Aviso de privacidade">
+      <div className="flex items-center gap-3 rounded-xl bg-deep/95 px-3 py-2 text-slate-200 shadow-xl backdrop-blur sm:rounded-2xl sm:px-4 sm:py-3">
+        <p className="flex-1 text-xs leading-snug sm:text-sm">
+          <span className="sm:hidden">Sem cookies de propaganda ou rastreamento. </span>
+          <span className="hidden sm:inline">Este site não usa cookies de propaganda nem de rastreamento. Guardamos no seu navegador só o necessário para ele funcionar. </span>
+          <Link to="/privacidade" className="font-semibold text-accent underline">Saiba mais</Link>
+        </p>
+        <button onClick={ok} className="btn-accent shrink-0 !px-4 !py-1.5 text-xs sm:text-sm">Entendi</button>
       </div>
     </div>
   )

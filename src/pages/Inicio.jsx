@@ -6,6 +6,13 @@ import Mapa from '../components/Mapa'
 import { Icone, CatDot } from '../components/ui'
 import IlustracaoAlagamento from '../components/IlustracaoAlagamento'
 import { FOTOS } from '../lib/fotos'
+import { compartilhar, enderecoSite } from '../lib/compartilhar'
+
+const chamarVizinhos = () => compartilhar({
+  titulo: 'Imperatriz em Alerta',
+  texto: 'Viu alagamento, bueiro entupido ou riacho transbordando em Imperatriz? Avise por aqui, leva menos de 2 minutos:',
+  url: enderecoSite(),
+})
 
 const PASSOS = [
   { t: 'Registre o problema', d: 'Escolha o tipo, marque o local no mapa, anexe uma foto e conte o que está acontecendo.', i: Icone.camera },
@@ -132,6 +139,7 @@ export default function Inicio() {
             <div className="flex flex-wrap gap-3">
               <Link to="/registrar" className="btn bg-white px-6 py-3 text-deep hover:bg-slate-100">Registrar um problema <Icone.seta /></Link>
               <Link to="/acompanhar" className="btn-ghost-dark px-6 py-3"><Icone.busca /> Consultar protocolo</Link>
+              <button type="button" onClick={chamarVizinhos} className="btn-ghost-dark px-6 py-3"><Icone.compartilhar /> Compartilhar no WhatsApp</button>
             </div>
           </div>
         </div>

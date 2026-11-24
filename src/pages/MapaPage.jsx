@@ -21,7 +21,7 @@ export default function MapaPage() {
         <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">Onde estão os problemas de Imperatriz</h1>
         <p className="mt-2 max-w-2xl text-slate-600">Cada ponto é um aviso de morador já conferido pela equipe. Toque em um ponto para ver o tipo, a foto e a situação.</p>
 
-        <div className="mt-8 grid gap-5 lg:grid-cols-[1fr_320px]">
+        <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="card overflow-hidden">
             {carregando ? <div className="px-5"><Carregando /></div> : erro ? <div className="p-5"><Erro texto={erro} tentar={recarregar} /></div> : <Mapa pontos={lista} foco={foco} className="h-[60vh] min-h-[420px]" />}
           </div>

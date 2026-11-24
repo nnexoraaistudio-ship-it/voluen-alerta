@@ -6,6 +6,9 @@ import { comprimirFoto } from '../lib/imagem'
 import { bairrosFixos, carregarBairros, acharBairro, ruasDoBairro, pontoDaRua, localizarTexto, normalizar } from '../lib/endereco'
 import Mapa from '../components/Mapa'
 import { Icone, CatDot } from '../components/ui'
+import { AVISOS_EMAIL_LIGADOS, TEL_DEFESA_CIVIL, TEL_BOMBEIROS } from '../config'
+import { guardarProtocolo } from '../lib/meusProtocolos'
+import { compartilhar, enderecoSite } from '../lib/compartilhar'
 
 const ETAPAS = ['Tipo', 'Local', 'Foto', 'Descrição', 'Enviar']
 const INICIAL = { categoria: '', bairro: '', rua: '', referencia: '', lat: null, lng: null, descricao: '', contato_nome: '', contato_telefone: '', contato_email: '' }
@@ -99,6 +102,7 @@ export default function Registrar() {
     setEnviando(true); setErro('')
     try {
       const r = await api.registrar(d, foto)
+      guardarProtocolo({ protocolo: r.protocolo, categoria: d.categoria, bairro: d.bairro, rua: d.rua, criado_em: new Date().toISOString() })
       setFeito(r.protocolo)
       window.scrollTo(0, 0)
     } catch (e) {
@@ -114,6 +118,15 @@ export default function Registrar() {
         <div className="eyebrow">Nova ocorrência</div>
         <h1 className="mt-2 text-3xl font-semibold sm:text-4xl">Registrar um problema</h1>
         <p className="mt-2 text-slate-600">Cinco passos rápidos. Nenhum dado pessoal é obrigatório.</p>
+
+        <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-900 sm:flex-row sm:items-center" role="note">
+          <Icone.alerta className="hidden shrink-0 sm:block" />
+          <p className="flex-1 text-sm leading-relaxed"><b>Risco de vida, pessoa ilhada ou casa invadida pela água?</b> Ligue agora. Este site não substitui o atendimento de emergência.</p>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <a href={`tel:${TEL_DEFESA_CIVIL}`} className="btn flex-1 whitespace-nowrap bg-rose-700 px-3 py-2 text-[13px] sm:text-sm text-white hover:bg-rose-800"><Icone.telefone /> Defesa Civil {TEL_DEFESA_CIVIL}</a>
+            <a href={`tel:${TEL_BOMBEIROS}`} className="btn flex-1 whitespace-nowrap border border-rose-300 bg-white px-3 py-2 text-[13px] sm:text-sm text-rose-800 hover:bg-rose-100"><Icone.telefone /> Bombeiros {TEL_BOMBEIROS}</a>
+          </div>
+        </div>
 
         <div className="card mt-8 p-5 sm:p-8">
           <ol className="grid grid-cols-5 gap-2" aria-label="Etapas">
@@ -217,13 +230,15 @@ export default function Registrar() {
             {etapa === 4 && (
               <div>
                 <h2 className="font-display text-xl font-semibold">Quer receber um retorno?</h2>
-                <p className="mt-1 text-sm text-slate-500">Opcional. Seus dados de contato nunca aparecem no mapa: só a equipe vê, e eles são apagados quando a ocorrência é encerrada.</p>
+                <p className="mt-1 text-sm text-slate-500">Opcional. {AVISOS_EMAIL_LIGADOS ? '' : 'A equipe pode usar estes dados para tirar dúvidas sobre o problema. '}Seus dados de contato nunca aparecem no mapa: só a equipe vê, e eles são apagados quando a ocorrência é encerrada.</p>
                 <div className="mt-4 grid gap-4 sm:grid-cols-3">
                   <div><label className="label" htmlFor="nome">Nome</label><input id="nome" className="input" value={d.contato_nome} onChange={set('contato_nome')} maxLength={100} autoComplete="name" /></div>
                   <div><label className="label" htmlFor="tel">Telefone</label><input id="tel" className="input" value={d.contato_telefone} onChange={set('contato_telefone')} maxLength={30} inputMode="tel" autoComplete="tel" /></div>
                   <div><label className="label" htmlFor="email">E-mail</label><input id="email" type="email" className="input" value={d.contato_email} onChange={set('contato_email')} maxLength={120} autoComplete="email" /></div>
                 </div>
-                <p className="mt-2 text-xs text-slate-500">Se informar o e-mail, você recebe o protocolo e um aviso a cada mudança na situação do seu pedido. Para parar de receber, é só responder ao e-mail.</p>
+                {AVISOS_EMAIL_LIGADOS
+                  ? <p className="mt-2 text-xs text-slate-500">Se informar o e-mail, você recebe o protocolo e um aviso a cada mudança na situação do seu pedido. Para parar de receber, é só responder ao e-mail.</p>
+                  : <p className="mt-2 text-xs text-slate-500">O andamento do seu pedido fica sempre disponível pelo número de protocolo, que aparece na próxima tela e fica guardado neste aparelho.</p>}
                 <div className="mt-6 rounded-2xl bg-mist p-4 text-sm">
                   <div className="font-semibold">Resumo</div>
                   <div className="mt-1 text-slate-600">{CATEGORIAS[d.categoria]?.nome} · {d.bairro} · {d.rua}{foto ? ' · com foto' : ''}</div>
@@ -253,6 +268,11 @@ export default function Registrar() {
 function Sucesso({ protocolo, novo }) {
   const [copiado, setCopiado] = useState(false)
   const copiar = () => navigator.clipboard?.writeText(protocolo).then(() => setCopiado(true), () => {})
+  const enviarParaMim = () => compartilhar({
+    titulo: 'Imperatriz em Alerta',
+    texto: `Registrei um problema no Imperatriz em Alerta. Protocolo: ${protocolo}. Acompanhe em:`,
+    url: `${enderecoSite()}#/acompanhar/${protocolo}`,
+  })
   return (
     <div className="bg-mist">
       <div className="wrap max-w-xl py-16 text-center">
@@ -263,9 +283,11 @@ function Sucesso({ protocolo, novo }) {
           <span className="select-all font-mono text-2xl font-medium text-deep">{protocolo}</span>
           <button onClick={copiar} className="btn-ghost !px-3 !py-1.5 text-xs">{copiado ? 'Copiado' : 'Copiar'}</button>
         </div>
+        <p className="mx-auto mt-3 max-w-sm text-xs text-slate-500">O número também fica guardado neste aparelho, na tela Protocolo.</p>
         <p className="mx-auto mt-5 max-w-sm text-sm text-slate-600">A equipe vai conferir as informações antes de publicar no mapa. Você acompanha cada etapa pelo protocolo.</p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Link to={`/acompanhar/${protocolo}`} className="btn-brand px-6 py-3">Acompanhar ocorrência</Link>
+          <button onClick={enviarParaMim} className="btn-ghost px-6 py-3"><Icone.compartilhar /> Enviar no WhatsApp</button>
           <button onClick={novo} className="btn-ghost px-6 py-3">Registrar outra</button>
         </div>
       </div>

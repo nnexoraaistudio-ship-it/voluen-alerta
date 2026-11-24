@@ -1,5 +1,5 @@
 -- =====================================================================
--- Voluen Alerta · avisos por e-mail para o morador
+-- Imperatriz em Alerta (plataforma Voluen Alerta) · avisos por e-mail para o morador
 -- O morador que informar um e-mail recebe:
 --   * a confirmação do registro, com o número de protocolo;
 --   * um aviso a cada mudança de situação (aprovada, em análise, encaminhada, resolvida ou recusada).
@@ -25,6 +25,7 @@ declare
   o public.ocorrencias%rowtype;
   v_chave text;
   v_remetente text;
+  v_site text;
   v_link text;
   v_titulo text;
   v_texto text;
@@ -37,7 +38,8 @@ begin
   select decrypted_secret into v_remetente from vault.decrypted_secrets where name = 'email_remetente' limit 1;
   if v_chave is null or v_remetente is null then return; end if;
 
-  v_link := 'https://nnexoraaistudio-ship-it.github.io/voluen-alerta/#/acompanhar/' || o.protocolo;
+  v_site := 'https://nnexoraaistudio-ship-it.github.io/voluen-alerta/';
+  v_link := v_site || '#/acompanhar/' || o.protocolo;
 
   v_titulo := case p_status
     when 'moderacao'   then 'Recebemos seu aviso'
@@ -57,25 +59,39 @@ begin
     when 'recusada'    then 'O seu aviso não pôde ser publicado.'
     else 'A situação do seu aviso mudou.' end;
 
+  -- Modelo do e-mail com a marca (cores e logo da Voluen). O logo fica hospedado no próprio site.
   v_html :=
-    '<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#0B2E3A">'
-    || '<div style="background:#0F5E6B;color:#fff;padding:16px 20px;border-radius:12px 12px 0 0;font-weight:bold">Voluen Alerta · Imperatriz-MA</div>'
-    || '<div style="border:1px solid #dfe6e8;border-top:0;padding:20px;border-radius:0 0 12px 12px">'
-    || '<h2 style="margin:0 0 12px">' || html_seguro(v_titulo) || '</h2>'
-    || '<p>' || html_seguro(v_texto) || '</p>'
-    || case when nullif(trim(p_mensagem), '') is not null
-         then '<p style="background:#F2F5F6;padding:12px;border-radius:8px"><b>Mensagem da equipe:</b><br>' || html_seguro(p_mensagem) || '</p>' else '' end
-    || '<p><b>Protocolo:</b> ' || html_seguro(o.protocolo) || '<br><b>Local:</b> ' || html_seguro(o.rua) || ', ' || html_seguro(o.bairro) || '</p>'
-    || '<p><a href="' || v_link || '" style="display:inline-block;background:#3CC6B0;color:#0B2E3A;padding:10px 16px;border-radius:999px;text-decoration:none;font-weight:bold">Acompanhar meu aviso</a></p>'
-    || '<p style="font-size:12px;color:#5b6b72">Você recebe este e-mail porque informou este endereço ao registrar o aviso. '
-    || 'Para não receber mais avisos ou pedir a exclusão dos seus dados, responda a este e-mail.</p>'
-    || '</div></div>';
+    '<div style="background:#F3F6FA;padding:24px 12px;font-family:Arial,Helvetica,sans-serif;color:#072B5A">'
+    || '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #E1E7EF">'
+    || '<tr><td style="height:6px;background:#0B4DA2;background-image:linear-gradient(90deg,#0B4DA2,#2BB3E6);font-size:0;line-height:0">&nbsp;</td></tr>'
+    || '<tr><td style="padding:22px 28px 16px;border-bottom:1px solid #EEF2F7">'
+    ||   '<img src="' || v_site || 'email/voluen-logo.png" width="132" height="32" alt="Voluen" style="display:block;border:0;width:132px;height:auto">'
+    ||   '<div style="margin-top:10px;font-size:13px;color:#5A6B85"><b style="color:#0B4DA2">Imperatriz em Alerta</b> &middot; Imperatriz-MA</div>'
+    || '</td></tr>'
+    || '<tr><td style="padding:24px 28px 8px">'
+    ||   '<h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#072B5A">' || html_seguro(v_titulo) || '</h1>'
+    ||   '<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#33445C">' || html_seguro(v_texto) || '</p>'
+    ||   case when nullif(trim(p_mensagem), '') is not null
+           then '<div style="margin:0 0 16px;background:#F3F6FA;border-left:4px solid #2BB3E6;padding:12px 14px;border-radius:8px;font-size:14px;line-height:1.5;color:#33445C"><b style="color:#072B5A">Mensagem da equipe:</b><br>' || html_seguro(p_mensagem) || '</div>' else '' end
+    ||   '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;font-size:14px;color:#33445C">'
+    ||     '<tr><td style="padding:2px 12px 2px 0;color:#5A6B85">Protocolo</td><td style="font-family:Consolas,monospace;font-weight:bold;color:#072B5A">' || html_seguro(o.protocolo) || '</td></tr>'
+    ||     '<tr><td style="padding:2px 12px 2px 0;color:#5A6B85">Local</td><td>' || html_seguro(o.rua) || ', ' || html_seguro(o.bairro) || '</td></tr>'
+    ||   '</table>'
+    ||   '<a href="' || v_link || '" style="display:inline-block;background:#0B4DA2;color:#ffffff;padding:12px 22px;border-radius:999px;text-decoration:none;font-weight:bold;font-size:15px">Acompanhar meu aviso</a>'
+    || '</td></tr>'
+    || '<tr><td style="padding:20px 28px 24px">'
+    ||   '<p style="margin:0;font-size:12px;line-height:1.5;color:#7A8AA0">Em emergência, ligue para a Defesa Civil (199) ou o Corpo de Bombeiros (193).</p>'
+    ||   '<p style="margin:8px 0 0;font-size:12px;line-height:1.5;color:#7A8AA0">Você recebe este e-mail porque informou este endereço ao registrar o aviso. '
+    ||   'Para não receber mais avisos ou pedir a exclusão dos seus dados, responda a este e-mail.</p>'
+    || '</td></tr>'
+    || '<tr><td style="background:#072B5A;padding:14px 28px;font-size:12px;color:#B9C7DA">Imperatriz em Alerta, por <b style="color:#ffffff">Voluen</b> &middot; Tecnologia para cidades que evoluem.</td></tr>'
+    || '</table></div>';
 
   perform net.http_post(
     url := 'https://api.brevo.com/v3/smtp/email',
     headers := jsonb_build_object('api-key', v_chave, 'content-type', 'application/json', 'accept', 'application/json'),
     body := jsonb_build_object(
-      'sender', jsonb_build_object('name', 'Voluen Alerta', 'email', v_remetente),
+      'sender', jsonb_build_object('name', 'Imperatriz em Alerta · Voluen', 'email', v_remetente),
       'replyTo', jsonb_build_object('email', v_remetente),
       'to', jsonb_build_array(jsonb_build_object('email', o.contato_email)),
       'subject', v_titulo || ' · protocolo ' || o.protocolo,

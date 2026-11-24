@@ -61,7 +61,7 @@ export default function Privacidade() {
           <p>O painel de gestão só pode ser acessado por pessoas autorizadas, com login e senha, e a sessão é encerrada sozinha após 30 minutos sem uso. Usamos conexão segura (https). Cada pessoa da equipe vê só o que precisa para a sua função: nome, telefone e e-mail do morador ficam visíveis apenas para administradores e são apagados automaticamente quando a ocorrência é resolvida ou recusada. O número de protocolo tem um final aleatório, para que ninguém consiga adivinhar o protocolo de outra pessoa.</p>
         </S>
         <S n="10" t="Cookies e armazenamento no navegador">
-          <p>O site não usa cookies de propaganda nem de rastreamento. Guardamos no seu navegador apenas o necessário para o funcionamento, como a confirmação de que você viu o aviso de privacidade e, para a equipe, a sessão de login.</p>
+          <p>O site não usa cookies de propaganda nem de rastreamento. Guardamos no seu navegador apenas o necessário para o funcionamento, como a confirmação de que você viu o aviso de privacidade, os números de protocolo que você registrou neste aparelho (para você não perdê-los) e, para a equipe, a sessão de login. Esses dados ficam só no seu aparelho e somem se você limpar os dados do navegador.</p>
         </S>
         <S n="11" t="Crianças e adolescentes">
           <p>O serviço é voltado a maiores de 18 anos. Menores de idade devem fazer o registro com a ajuda de um responsável.</p>
