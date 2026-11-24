@@ -8,6 +8,7 @@ const NAV = [
   { to: '/', nome: 'Início', icone: Icone.casa, fim: true },
   { to: '/mapa', nome: 'Mapa', icone: Icone.mapa },
   { to: '/acompanhar', nome: 'Acompanhar', icone: Icone.lista },
+  { to: '/sobre', nome: 'Sobre', icone: Icone.doc },
 ]
 
 function Topo() {
@@ -59,6 +60,7 @@ function Rodape() {
             <li><Link className="hover:text-white" to="/registrar">Registrar ocorrência</Link></li>
             <li><Link className="hover:text-white" to="/mapa">Mapa de ocorrências</Link></li>
             <li><Link className="hover:text-white" to="/acompanhar">Acompanhar protocolo</Link></li>
+            <li><Link className="hover:text-white" to="/sobre">Sobre o projeto</Link></li>
             <li><Link className="hover:text-white" to="/privacidade">Política de privacidade</Link></li>
           </ul>
         </div>
@@ -67,6 +69,7 @@ function Rodape() {
           <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-[13px] leading-relaxed text-slate-400">
             Versão de testes. Ainda não é um canal oficial da Prefeitura de Imperatriz.
           </div>
+          <Link to="/sobre" className="inline-block text-sm font-semibold text-slate-200 hover:text-white">Conheça o projeto e a Voluen →</Link>
           <p className="text-sm text-slate-400">Contato: <span className="select-all text-slate-200">{CONTATO_EMAIL}</span></p>
         </div>
       </div>
