@@ -19,7 +19,7 @@
   .btn-ghost-dark { @apply btn border border-white/20 text-white hover:bg-white/10; }
   .card { @apply rounded-2xl border border-slate-200/80 bg-white shadow-soft; }
   .eyebrow { @apply text-xs font-semibold uppercase tracking-[.14em] text-brand; }
-  .input { @apply w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-[15px] text-deep placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15; }
+  .input { @apply w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-base text-deep sm:text-[15px] placeholder:text-slate-400 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15; }
   .label { @apply mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500; }
   .num { font-variant-numeric: tabular-nums; }
 }

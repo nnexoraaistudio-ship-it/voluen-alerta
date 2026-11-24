@@ -23,7 +23,7 @@ export default function Moderacao() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {pend.map((o) => (
             <button key={o.id} onClick={() => abrir(o.id)} className="card overflow-hidden text-left transition hover:-translate-y-0.5 hover:shadow-lg">
-              {o.foto_url ? <img src={o.foto_url} alt="" className="h-40 w-full object-cover" /> : <div className="grid h-40 place-items-center bg-slate-100 text-sm text-slate-400">Sem foto</div>}
+              {o.foto_url ? <img src={o.foto_url} alt="" className="h-40 w-full object-cover" /> : <div className="grid h-10 place-items-center bg-slate-100 text-xs text-slate-400 sm:h-40 sm:text-sm">Sem foto</div>}
               <div className="p-4">
                 <div className="font-mono text-xs text-slate-400">{o.protocolo}</div>
                 <div className="mt-1 font-semibold">{CATEGORIAS[o.categoria].nome}</div>

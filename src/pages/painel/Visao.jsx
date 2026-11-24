@@ -47,7 +47,7 @@ export default function Visao() {
           {pend.length} ocorrência(s) esperando moderação <span>Moderar →</span>
         </Link>
       )}
-      <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <section className="card overflow-hidden">
           <div className="flex flex-wrap items-center justify-between gap-3 p-5 pb-3">
             <h2 className="font-semibold">{visao === 'calor' ? 'Mapa de calor: onde mais alaga' : 'Mapa das ocorrências em aberto'}</h2>

@@ -21,7 +21,8 @@ function Topo() {
             <NavLink key={n.to} to={n.to} end={n.fim} className={({ isActive }) => `rounded-full px-4 py-2 text-sm font-medium transition ${isActive ? 'bg-brand-50 text-brand' : 'text-slate-600 hover:text-deep'}`}>{n.nome}</NavLink>
           ))}
         </nav>
-        <Link to="/registrar" className="btn-dark hidden sm:inline-flex"><Icone.mais /> Registrar problema</Link>
+        <Link to="/sobre" className="rounded-full px-3 py-2 text-sm font-medium text-slate-600 hover:text-deep md:hidden">Sobre</Link>
+        <Link to="/registrar" className="btn-dark hidden md:inline-flex"><Icone.mais /> Registrar problema</Link>
       </div>
     </header>
   )
@@ -110,8 +111,9 @@ export default function Layout() {
     <div className="flex min-h-screen flex-col">
       {MODO_DEMO && <div className="bg-amber-100 px-4 py-1.5 text-center text-xs font-medium text-amber-900 no-print">Modo demonstração: os dados são de exemplo e ficam só neste navegador. Nada é enviado à prefeitura.</div>}
       <Topo />
-      <main className="flex-1 pb-20 md:pb-0"><Outlet /></main>
+      <main className="flex-1"><Outlet /></main>
       <Rodape />
+      <div className="h-[calc(4.5rem+env(safe-area-inset-bottom))] bg-deep md:hidden no-print" aria-hidden="true" />
       <MenuCelular />
       <AvisoPrivacidade />
     </div>

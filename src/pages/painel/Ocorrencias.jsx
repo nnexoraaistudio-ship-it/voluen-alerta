@@ -19,13 +19,29 @@ export default function Ocorrencias() {
         <h1 className="text-2xl font-semibold">Ocorrências</h1>
         <p className="text-sm text-slate-500">Clique em uma linha para ver os detalhes e atualizar.</p>
       </div>
-      <div className="flex flex-wrap gap-2">
-        <input className="input max-w-xs" placeholder="Buscar protocolo, rua ou texto" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar" />
-        <select className="input w-auto" value={st} onChange={(e) => setSt(e.target.value)} aria-label="Situação"><option value="">Todas as situações</option>{Object.entries(STATUS).map(([k, s]) => <option key={k} value={k}>{s.nome}</option>)}</select>
-        <select className="input w-auto" value={cat} onChange={(e) => setCat(e.target.value)} aria-label="Tipo"><option value="">Todos os tipos</option>{Object.entries(CATEGORIAS).map(([k, c]) => <option key={k} value={k}>{c.nome}</option>)}</select>
-        <select className="input w-auto" value={bairro} onChange={(e) => setBairro(e.target.value)} aria-label="Bairro"><option value="">Todos os bairros</option>{bairros.map((b) => <option key={b}>{b}</option>)}</select>
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+        <input className="input col-span-2 sm:max-w-xs" placeholder="Buscar protocolo, rua ou texto" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar" />
+        <select className="input sm:w-auto" value={st} onChange={(e) => setSt(e.target.value)} aria-label="Situação"><option value="">Todas as situações</option>{Object.entries(STATUS).map(([k, s]) => <option key={k} value={k}>{s.nome}</option>)}</select>
+        <select className="input sm:w-auto" value={cat} onChange={(e) => setCat(e.target.value)} aria-label="Tipo"><option value="">Todos os tipos</option>{Object.entries(CATEGORIAS).map(([k, c]) => <option key={k} value={k}>{c.nome}</option>)}</select>
+        <select className="input sm:w-auto" value={bairro} onChange={(e) => setBairro(e.target.value)} aria-label="Bairro"><option value="">Todos os bairros</option>{bairros.map((b) => <option key={b}>{b}</option>)}</select>
       </div>
-      <div className="card overflow-x-auto">
+      <ul className="space-y-2 md:hidden">
+        {filtrada.map((o) => (
+          <li key={o.id}>
+            <button type="button" onClick={() => abrir(o.id)} className="card flex w-full items-start gap-3 p-4 text-left active:bg-slate-50">
+              <span className="mt-1.5"><CatDot categoria={o.categoria} /></span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold">{CATEGORIAS[o.categoria].nome}</span>
+                <span className="block truncate text-xs text-slate-500">{o.bairro} · {o.rua}</span>
+                <span className="mt-1 block font-mono text-[11px] text-slate-400">{o.protocolo} · {data(o.created_at)}</span>
+              </span>
+              <StatusPill status={o.status} curto />
+            </button>
+          </li>
+        ))}
+        {filtrada.length === 0 && <li className="card p-6 text-center text-sm text-slate-500">Nenhuma ocorrência com esses filtros.</li>}
+      </ul>
+      <div className="card hidden overflow-x-auto md:block">
         <table className="w-full min-w-[760px] text-sm">
           <thead><tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wider text-slate-500">
             <th className="px-4 py-3">Protocolo</th><th className="px-4 py-3">Tipo</th><th className="px-4 py-3">Bairro / rua</th><th className="px-4 py-3">Data</th><th className="px-4 py-3">Situação</th>

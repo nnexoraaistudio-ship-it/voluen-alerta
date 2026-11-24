@@ -37,7 +37,7 @@ export default function Inicio() {
             </span>
             <h1 className="mt-5 text-[40px] font-semibold leading-[1.05] sm:text-6xl">Viu um alagamento?<br /><span className="underline decoration-white/60 decoration-4 underline-offset-8">Avise a cidade.</span></h1>
             <p className="mt-5 max-w-lg text-[17px] leading-relaxed text-white/85">Registre bueiros entupidos, ruas alagadas e riachos transbordando no seu bairro. Cada aviso ganha um protocolo e aparece no mapa, mostrando onde a ajuda é mais urgente.</p>
-            <div className="mt-8 flex flex-wrap gap-3">
+            <div className="mt-8 grid gap-3 sm:flex sm:flex-wrap">
               <Link to="/registrar" className="btn bg-white px-6 py-3 text-[15px] text-brand hover:bg-brand-50">Registrar um problema <Icone.seta /></Link>
               <Link to="/mapa" className="btn-ghost-dark px-6 py-3 text-[15px]"><Icone.pin /> Ver o mapa</Link>
             </div>
@@ -61,16 +61,16 @@ export default function Inicio() {
       </section>
 
       <section className="bg-mist">
-        <div className="wrap grid gap-4 pb-14 pt-10 sm:grid-cols-3">
+        <div className="wrap grid grid-cols-3 gap-2 pb-12 pt-8 sm:gap-4 sm:pb-14 sm:pt-10">
           {[
             ['Avisos no mapa', lista.length, 'conferidos e publicados', 'bg-white'],
             ['Em andamento', andamento, 'recebidos, em análise ou encaminhados', 'bg-amber-50/70'],
             ['Resolvidos', resolvidas, 'problemas já solucionados', 'bg-emerald-50/70'],
           ].map(([t, n, d, bg]) => (
-            <div key={t} className={`card ${bg} p-6`}>
-              <div className="text-xs font-semibold uppercase tracking-[.12em] text-slate-500">{t}</div>
-              <div className="num mt-1 font-display text-4xl font-semibold">{dados ? n : '–'}</div>
-              <div className="text-sm text-slate-500">{d}</div>
+            <div key={t} className={`card ${bg} p-3 sm:p-6`}>
+              <div className="text-[10px] font-semibold uppercase leading-tight tracking-[.08em] text-slate-500 sm:text-xs sm:tracking-[.12em]">{t}</div>
+              <div className="num mt-1 font-display text-3xl font-semibold sm:text-4xl">{dados ? n : '–'}</div>
+              <div className="hidden text-sm text-slate-500 sm:block">{d}</div>
             </div>
           ))}
         </div>
@@ -136,7 +136,7 @@ export default function Inicio() {
               <h2 className="text-2xl font-semibold sm:text-3xl">Viu um problema no seu bairro?</h2>
               <p className="mt-2 max-w-lg text-slate-200">Não deixe para depois. Um aviso pode colocar a sua rua na lista de prioridades da cidade.</p>
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="grid gap-3 sm:flex sm:flex-wrap">
               <Link to="/registrar" className="btn bg-white px-6 py-3 text-deep hover:bg-slate-100">Registrar um problema <Icone.seta /></Link>
               <Link to="/acompanhar" className="btn-ghost-dark px-6 py-3"><Icone.busca /> Consultar protocolo</Link>
               <button type="button" onClick={chamarVizinhos} className="btn-ghost-dark px-6 py-3"><Icone.compartilhar /> Compartilhar no WhatsApp</button>
