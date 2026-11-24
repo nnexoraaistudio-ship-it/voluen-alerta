@@ -4,7 +4,32 @@ import { api } from '../lib/api'
 import { CATEGORIAS } from '../lib/constants'
 import Linha from '../components/Linha'
 import { Carregando, Icone, StatusPill } from '../components/ui'
-import { dataHora } from '../lib/format'
+import { dataHora, data } from '../lib/format'
+import { compartilhar, enderecoSite } from '../lib/compartilhar'
+import { lerProtocolos, esquecerProtocolo } from '../lib/meusProtocolos'
+
+function MeusProtocolos() {
+  const [lista, setLista] = useState(lerProtocolos)
+  if (!lista.length) return null
+  const esquecer = (p) => { esquecerProtocolo(p); setLista(lerProtocolos()) }
+  return (
+    <div className="card mb-6 p-5">
+      <h2 className="text-lg font-semibold">Meus protocolos</h2>
+      <p className="mt-1 text-sm text-slate-500">Registrados neste aparelho. Toque para ver o andamento.</p>
+      <ul className="mt-4 divide-y divide-slate-100">
+        {lista.map((p) => (
+          <li key={p.protocolo} className="flex items-center gap-3 py-3">
+            <Link to={`/acompanhar/${p.protocolo}`} className="min-w-0 flex-1 rounded-lg hover:text-brand">
+              <span className="block font-mono text-sm font-medium text-deep">{p.protocolo}</span>
+              <span className="block truncate text-xs text-slate-500">{[CATEGORIAS[p.categoria]?.nome, p.bairro, p.criado_em && data(p.criado_em)].filter(Boolean).join(' · ')}</span>
+            </Link>
+            <button onClick={() => esquecer(p.protocolo)} className="shrink-0 rounded-lg px-2 py-1 text-xs font-semibold text-slate-400 hover:text-rose-700" aria-label={`Tirar o protocolo ${p.protocolo} desta lista`}>Tirar da lista</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
 
 export default function Acompanhar() {
   const { protocolo } = useParams()
@@ -54,9 +79,13 @@ export default function Acompanhar() {
                 <p className="mt-4 rounded-xl bg-mist p-4 text-[15px] text-slate-700">{r.descricao}</p>
                 <h3 className="mb-4 mt-8 text-sm font-semibold uppercase tracking-wider text-slate-500">Andamento</h3>
                 <Linha status={r.status} historico={r.historico} motivo={r.motivo_recusa} />
+                <div className="mt-6 border-t border-slate-100 pt-5">
+                  <button type="button" onClick={() => compartilhar({ titulo: 'Imperatriz em Alerta', texto: `Acompanhe a ocorrência ${r.protocolo} no Imperatriz em Alerta:`, url: `${enderecoSite()}#/acompanhar/${r.protocolo}` })} className="btn-ghost text-sm"><Icone.compartilhar /> Compartilhar no WhatsApp</button>
+                </div>
               </div>
             </div>
           )}
+          {r === undefined && !carregando && !erro && <MeusProtocolos />}
           {r === undefined && !carregando && !erro && (
             <div className="card p-6">
               <h2 className="text-lg font-semibold">O que acontece depois do registro?</h2>
