@@ -38,7 +38,7 @@ begin
   select decrypted_secret into v_remetente from vault.decrypted_secrets where name = 'email_remetente' limit 1;
   if v_chave is null or v_remetente is null then return; end if;
 
-  v_site := 'https://nnexoraaistudio-ship-it.github.io/voluen-alerta/';
+  v_site := 'https://voluen.com.br/';
   v_link := v_site || '#/acompanhar/' || o.protocolo;
 
   v_titulo := case p_status
