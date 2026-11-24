@@ -3,7 +3,8 @@ import { api } from '../lib/api'
 import { useCarregar } from '../lib/hooks'
 import { CATEGORIAS, STATUS, PUBLICOS } from '../lib/constants'
 import Mapa from '../components/Mapa'
-import { CatDot, Carregando, Erro, StatusPill } from '../components/ui'
+import { CatDot, Carregando, Erro, StatusPill, Alternar } from '../components/ui'
+import { LegendaCalor } from '../components/CamadaCalor'
 import { data } from '../lib/format'
 
 export default function MapaPage() {
@@ -11,6 +12,7 @@ export default function MapaPage() {
   const [cats, setCats] = useState(() => new Set(Object.keys(CATEGORIAS)))
   const [st, setSt] = useState('abertas')
   const [foco, setFoco] = useState(null)
+  const [visao, setVisao] = useState('pontos')
   const lista = useMemo(() => (dados || []).filter((o) => cats.has(o.categoria) && (st === 'todas' || (st === 'abertas' ? o.status !== 'resolvida' : o.status === st))), [dados, cats, st])
   const alternar = (k) => { const n = new Set(cats); n.has(k) ? n.delete(k) : n.add(k); setCats(n) }
 
@@ -23,7 +25,12 @@ export default function MapaPage() {
 
         <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="card overflow-hidden">
-            {carregando ? <div className="px-5"><Carregando /></div> : erro ? <div className="p-5"><Erro texto={erro} tentar={recarregar} /></div> : <Mapa pontos={lista} foco={foco} className="h-[60vh] min-h-[420px]" />}
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+              <Alternar rotulo="Tipo de mapa" valor={visao} onChange={setVisao} opcoes={[['pontos', 'Pontos'], ['calor', 'Mapa de calor']]} />
+              {visao === 'calor' && <LegendaCalor />}
+            </div>
+            {carregando ? <div className="px-5"><Carregando /></div> : erro ? <div className="p-5"><Erro texto={erro} tentar={recarregar} /></div> : <Mapa pontos={lista} calor={visao === 'calor' ? lista : null} foco={foco} className="h-[60vh] min-h-[420px]" />}
+            {visao === 'calor' && <p className="px-4 py-3 text-xs text-slate-500">As cores mais quentes mostram onde os moradores mais avisaram sobre problemas, conforme os filtros escolhidos. Só entram avisos já conferidos pela equipe.</p>}
           </div>
           <aside className="space-y-4">
             <div className="card p-5">

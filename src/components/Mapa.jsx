@@ -6,6 +6,7 @@ import { CATEGORIAS } from '../lib/constants'
 import { CENTRO_MAPA } from '../config'
 import { StatusPill } from './ui'
 import { data } from '../lib/format'
+import CamadaCalor from './CamadaCalor'
 
 const icones = {}
 const iconeDe = (cor, grande) => {
@@ -25,7 +26,7 @@ function Voar({ alvo, zoom }) {
   return null
 }
 
-export default function Mapa({ pontos = [], escolha, onPick, foco, linhas = [], className = 'h-[420px]', zoom = 13, interativo = true }) {
+export default function Mapa({ pontos = [], escolha, onPick, foco, linhas = [], className = 'h-[420px]', zoom = 13, interativo = true, calor = null }) {
   return (
     <MapContainer center={escolha || CENTRO_MAPA} zoom={escolha ? 16 : zoom} minZoom={11} maxBounds={LIMITES} scrollWheelZoom={interativo} dragging={interativo} className={`w-full ${className}`}>
       <TileLayer
@@ -35,7 +36,8 @@ export default function Mapa({ pontos = [], escolha, onPick, foco, linhas = [], 
       />
       <Clique onPick={onPick} />
       <Voar alvo={foco || escolha} />
-      {pontos.map((o) => (
+      {calor && <CamadaCalor pontos={calor} />}
+      {!calor && pontos.map((o) => (
         <Marker key={o.id} position={[o.lat, o.lng]} icon={iconeDe(CATEGORIAS[o.categoria]?.cor || '#475569')}>
           <Popup maxWidth={260}>
             <div className="w-56 space-y-2">
