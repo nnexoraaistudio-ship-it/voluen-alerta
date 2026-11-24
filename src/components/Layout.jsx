@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Logo, Icone } from './ui'
 import { VoluenMarca } from './Marca'
-import { MODO_DEMO, CONTATO_EMAIL } from '../config'
+import Assistente from './Assistente'
+import { MODO_DEMO, CONTATO_EMAIL, ASSISTENTE_LIGADO } from '../config'
 
 const NAV = [
   { to: '/', nome: 'Início', icone: Icone.casa, fim: true },
@@ -116,6 +117,7 @@ export default function Layout() {
       <div className="h-[calc(4.5rem+env(safe-area-inset-bottom))] bg-deep md:hidden no-print" aria-hidden="true" />
       <MenuCelular />
       <AvisoPrivacidade />
+      {ASSISTENTE_LIGADO && !MODO_DEMO && <Assistente />}
     </div>
   )
 }

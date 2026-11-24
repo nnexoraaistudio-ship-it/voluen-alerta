@@ -36,6 +36,27 @@ navegador. O painel deixa escolher um perfil de exemplo para entrar.
    `SUPABASE_URL` e `SUPABASE_ANON_KEY` (Project Settings → API no Supabase).
 6. Rode de novo o workflow **Publicar site** (aba Actions).
 
+## Assistente (balãozinho de conversa)
+
+Um assistente de IA no canto do site tira dúvidas dos moradores e ajuda a preencher o registro.
+Ele usa o Claude (modelo `claude-haiku-5-5`, o mais barato) por meio de uma função no Supabase,
+então a chave da IA nunca fica no site.
+
+| Peça | Onde |
+| --- | --- |
+| Função do servidor (guarda a chave, limita mensagens, fala com o Claude) | `supabase/functions/assistente/index.ts` |
+| Contador de mensagens por pessoa e por dia | `supabase/assistente.sql` |
+| Balãozinho | `src/components/Assistente.jsx` |
+| Ligar ou desligar | `ASSISTENTE_LIGADO` em `src/config.js` |
+
+Limites padrão: 20 mensagens por pessoa por dia e 1.500 no total por dia. Dá para mudar sem
+mexer no código, criando os segredos `ASSISTENTE_LIMITE_PESSOA` e `ASSISTENTE_LIMITE_TOTAL` no Supabase.
+O assistente não envia nada sozinho: ele monta um rascunho e o morador confere e envia no formulário.
+
+Para ligar: rode `supabase/assistente.sql` no SQL Editor, crie o segredo `ANTHROPIC_API_KEY` em
+**Edge Functions → Secrets** e publique a função `assistente` com a verificação de JWT desligada
+(o site usa a chave pública `sb_publishable_`, que não é um JWT).
+
 ## Rodar no computador
 
 ```bash

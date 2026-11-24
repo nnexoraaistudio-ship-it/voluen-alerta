@@ -24,6 +24,7 @@ export default function Privacidade() {
             <li><b>Sobre você, só se quiser informar:</b> nome, telefone ou e-mail. O registro anônimo é sempre possível.</li>
             <li><b>Registro do seu consentimento:</b> a data e a hora em que você aceitou esta política.</li>
             <li><b>Proteção contra abuso:</b> para impedir envios em massa, guardamos por no máximo 1 dia um código embaralhado gerado a partir da conexão de quem registra. Esse código não permite identificar você e é apagado automaticamente.</li>
+            <li><b>Se você usar o assistente (balãozinho de conversa):</b> as mensagens que você escreve nele. Elas não ficam guardadas no nosso banco de dados. Para limitar o número de mensagens por dia, guardamos só uma contagem ligada a um código embaralhado da sua conexão, apagada em até 7 dias.</li>
           </ul>
           <p>Não usamos ferramentas de estatística, propaganda ou rastreamento. A foto é reduzida no seu aparelho antes do envio, o que também remove informações escondidas no arquivo, como a localização GPS da câmera.</p>
         </S>
@@ -48,6 +49,7 @@ export default function Privacidade() {
             <li>As páginas do site são entregues pelo GitHub Pages e o mapa e a lista de bairros e ruas usam serviços públicos do OpenStreetMap. Esses serviços recebem dados técnicos da conexão (como o endereço IP), mas não recebem os dados das ocorrências.</li>
             <li>Se você informar um e-mail, ele é usado só para enviar o protocolo e os avisos sobre a sua ocorrência. O envio é feito pela Brevo, empresa de envio de e-mails que pode guardar os dados em servidores fora do Brasil, com medidas de segurança adequadas.</li>
             <li>Se for firmada uma parceria com a Prefeitura de Imperatriz, as ocorrências serão compartilhadas com ela e seus setores responsáveis (como Defesa Civil e Secretaria de Obras), para atender ao pedido.</li>
+            <li>As mensagens escritas no assistente são enviadas à Anthropic, empresa que fornece a inteligência artificial que gera as respostas, com servidores nos Estados Unidos. Ela recebe só o texto da conversa, pode guardá-lo por um período limitado por segurança e não o usa para treinar seus modelos. Por isso, não escreva nome, telefone, CPF ou endereço de casa no assistente.</li>
             <li>Com autoridades, quando a lei exigir.</li>
           </ul>
         </S>
@@ -61,7 +63,7 @@ export default function Privacidade() {
           <p>O painel de gestão só pode ser acessado por pessoas autorizadas, com login e senha, e a sessão é encerrada sozinha após 30 minutos sem uso. Usamos conexão segura (https). Cada pessoa da equipe vê só o que precisa para a sua função: nome, telefone e e-mail do morador ficam visíveis apenas para administradores e são apagados automaticamente quando a ocorrência é resolvida ou recusada. O número de protocolo tem um final aleatório, para que ninguém consiga adivinhar o protocolo de outra pessoa.</p>
         </S>
         <S n="10" t="Cookies e armazenamento no navegador">
-          <p>O site não usa cookies de propaganda nem de rastreamento. Guardamos no seu navegador apenas o necessário para o funcionamento, como a confirmação de que você viu o aviso de privacidade, os números de protocolo que você registrou neste aparelho (para você não perdê-los) e, para a equipe, a sessão de login. Esses dados ficam só no seu aparelho e somem se você limpar os dados do navegador.</p>
+          <p>O site não usa cookies de propaganda nem de rastreamento. Guardamos no seu navegador apenas o necessário para o funcionamento, como a confirmação de que você viu o aviso de privacidade, os números de protocolo que você registrou neste aparelho (para você não perdê-los), a conversa com o assistente enquanto a aba estiver aberta e, para a equipe, a sessão de login. Esses dados ficam só no seu aparelho e somem se você limpar os dados do navegador.</p>
         </S>
         <S n="11" t="Crianças e adolescentes">
           <p>O serviço é voltado a maiores de 18 anos. Menores de idade devem fazer o registro com a ajuda de um responsável.</p>

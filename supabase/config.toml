@@ -1,0 +1,4 @@
+[functions.assistente]
+# O site chama a função com a chave pública (sb_publishable_...), que não é um JWT.
+# A proteção fica dentro da função: origem permitida + limite de mensagens por pessoa.
+verify_jwt = false

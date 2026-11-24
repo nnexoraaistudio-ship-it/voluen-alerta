@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { api } from '../lib/api'
 import { CATEGORIAS } from '../lib/constants'
 import { comprimirFoto } from '../lib/imagem'
@@ -9,6 +9,7 @@ import { Icone, CatDot } from '../components/ui'
 import { AVISOS_EMAIL_LIGADOS, TEL_DEFESA_CIVIL, TEL_BOMBEIROS } from '../config'
 import { guardarProtocolo } from '../lib/meusProtocolos'
 import { compartilhar, enderecoSite } from '../lib/compartilhar'
+import { pegarRascunho } from '../lib/assistente'
 
 const ETAPAS = ['Tipo', 'Local', 'Foto', 'Descrição', 'Enviar']
 const INICIAL = { categoria: '', bairro: '', rua: '', referencia: '', lat: null, lng: null, descricao: '', contato_nome: '', contato_telefone: '', contato_email: '' }
@@ -31,12 +32,30 @@ export default function Registrar() {
   const [foco, setFoco] = useState(null)
   const bairroAtual = useRef('')
   const set = (k) => (e) => setD({ ...d, [k]: e.target ? e.target.value : e })
+  const [doAssistente, setDoAssistente] = useState(false)
+  const location = useLocation()
+
+  // Rascunho preparado pelo assistente (balãozinho): preenche o formulário e leva ao passo do local.
+  useEffect(() => {
+    const r = pegarRascunho()
+    if (!r) return
+    setFeito(null); setFoto(null); setAceite(false); setErro('')
+    setD({ ...INICIAL, categoria: CATEGORIAS[r.categoria] ? r.categoria : '', referencia: r.referencia || '', descricao: r.descricao || '' })
+    setDoAssistente(true)
+    setEtapa(CATEGORIAS[r.categoria] ? 1 : 0)
+    carregarBairros().then((lista) => {
+      setBairros(lista)
+      const achado = lista.find((b) => normalizar(b.nome) === normalizar(r.bairro || ''))
+      if (achado) { setBairroManual(false); mudarBairro(achado.nome, r.rua) }
+      else if (r.bairro) { setBairroManual(true); mudarBairro(r.bairro, r.rua) }
+    }).catch(() => { if (r.bairro) { setBairroManual(true); mudarBairro(r.bairro, r.rua) } })
+  }, [location.state?.rascunho]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { if (etapa === 1) carregarBairros().then(setBairros) }, [etapa]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function mudarBairro(valor) {
+  async function mudarBairro(valor, ruaDesejada = '') {
     bairroAtual.current = valor
-    setD((x) => ({ ...x, bairro: valor, rua: '', lat: null, lng: null }))
+    setD((x) => ({ ...x, bairro: valor, rua: ruaDesejada, lat: null, lng: null }))
     setLinhas([]); setRuas(null); setBairroInfo(null); setRuaManual(false)
     const b = await acharBairro(valor).catch(() => null)
     if (!b || bairroAtual.current !== valor) return
@@ -48,13 +67,22 @@ export default function Registrar() {
       setRuas(lista)
       if (!lista.length) setRuaManual(true)
       setGps(lista.length ? `Agora escolha a rua (${lista.length} ruas encontradas em ${b.nome}).` : 'Não achamos as ruas desse bairro. Digite a rua e toque no mapa no local exato.')
+      if (ruaDesejada) {
+        const r = lista.find((x) => normalizar(x.nome) === normalizar(ruaDesejada)) || lista.find((x) => normalizar(x.nome).includes(normalizar(ruaDesejada)))
+        if (r) aplicarRua(r, b)
+        else { setRuaManual(true); setD((x) => ({ ...x, rua: ruaDesejada })); setGps('Não achamos essa rua na lista. Confira o nome e toque no mapa no local exato do problema.') }
+      }
     } catch { setRuas([]); setRuaManual(true); setGps('A lista de ruas não respondeu. Digite a rua e toque no mapa no local exato.') }
   }
 
   function mudarRua(valor) {
     const r = ruas?.find((x) => normalizar(x.nome) === normalizar(valor))
     if (!r) { setD((x) => ({ ...x, rua: valor })); setLinhas([]); return }
-    const centro = bairroInfo ? [bairroInfo.lat, bairroInfo.lng] : r.linhas[0][0]
+    aplicarRua(r, bairroInfo)
+  }
+
+  function aplicarRua(r, bairroRef) {
+    const centro = bairroRef ? [bairroRef.lat, bairroRef.lng] : r.linhas[0][0]
     const [lat, lng] = pontoDaRua(r, centro)
     setD((x) => ({ ...x, rua: r.nome, lat, lng }))
     setLinhas(r.linhas); setFoco([lat, lng])
@@ -127,6 +155,14 @@ export default function Registrar() {
             <a href={`tel:${TEL_BOMBEIROS}`} className="btn flex-1 whitespace-nowrap border border-rose-300 bg-white px-3 py-2 text-[13px] sm:text-sm text-rose-800 hover:bg-rose-100"><Icone.telefone /> Bombeiros {TEL_BOMBEIROS}</a>
           </div>
         </div>
+
+        {doAssistente && (
+          <div className="mt-6 flex gap-3 rounded-2xl border border-brand/20 bg-brand-50 p-4 text-sm leading-relaxed text-deep" role="status">
+            <Icone.check className="mt-0.5 shrink-0 text-brand" />
+            <p className="flex-1">Preenchemos o formulário com o que você contou ao assistente. Confira cada passo, marque o ponto exato no mapa e envie. Nada foi enviado ainda.</p>
+            <button type="button" onClick={() => setDoAssistente(false)} aria-label="Fechar aviso" className="shrink-0 text-slate-500 hover:text-deep"><Icone.x width="16" height="16" /></button>
+          </div>
+        )}
 
         <div className="card mt-8 p-5 sm:p-8">
           <ol className="grid grid-cols-5 gap-2" aria-label="Etapas">

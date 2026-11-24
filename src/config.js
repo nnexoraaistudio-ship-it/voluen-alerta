@@ -21,3 +21,9 @@ export const AVISOS_EMAIL_LIGADOS = true
 // Telefones de emergência mostrados no site.
 export const TEL_DEFESA_CIVIL = '199'
 export const TEL_BOMBEIROS = '193'
+
+// Assistente do site (balãozinho de conversa no canto da tela).
+// Ele chama a função "assistente" do Supabase (supabase/functions/assistente), que guarda
+// a chave da IA no servidor. Para esconder o balãozinho, troque para false e publique de novo.
+export const ASSISTENTE_LIGADO = true
+export const ASSISTENTE_URL = import.meta.env.VITE_ASSISTENTE_URL || `${SUPABASE_URL}/functions/v1/assistente`
