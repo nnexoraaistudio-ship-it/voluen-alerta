@@ -53,7 +53,7 @@ export default function Registrar() {
     }))
   }, [perfil?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { if (etapa === 1 && modo === 'lista') carregarBairros().then(setBairros) }, [etapa, modo]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (etapa === 1) carregarBairros().then(setBairros) }, [etapa]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function mudarBairro(valor) {
     bairroAtual.current = valor
@@ -117,8 +117,9 @@ export default function Registrar() {
   async function preencherEndereco(lat, lng) {
     try {
       const e = await enderecoDoPonto(lat, lng)
-      setD((x) => ({ ...x, bairro: e.bairro || x.bairro, rua: e.rua || x.rua }))
-      if (!e.bairro || !e.rua) setGps('Confira o ponto no mapa e complete o que faltar no bairro e na rua.')
+      // O bairro do mapa aberto costuma vir errado em Imperatriz: a pessoa escolhe o bairro; só a rua é preenchida.
+      setD((x) => ({ ...x, rua: e.rua || x.rua }))
+      if (!e.rua) setGps('Confira o ponto no mapa e digite o nome da rua.')
     } catch { setGps('Não conseguimos achar o nome da rua agora. Digite o bairro e a rua abaixo.') }
   }
 
@@ -139,7 +140,7 @@ export default function Registrar() {
           setModo('lista'); return
         }
         setModo('gps'); setPrecisao(accuracy); setFoco([lat, lng]); setLinhas([]); setConfirmado(false)
-        setD((x) => ({ ...x, lat, lng, bairro: '', rua: '' }))
+        setD((x) => ({ ...x, lat, lng, bairro: '', rua: '' })); setBairroManual(false)
         setGps(accuracy > 60 ? `A localização está aproximada (cerca de ${Math.round(accuracy)} m). Arraste o pino até o ponto exato.` : 'Achamos você! Confira o pino no mapa.')
         await preencherEndereco(lat, lng)
       },
@@ -291,7 +292,16 @@ export default function Registrar() {
 
                 {modo === 'gps' && d.lat != null && (
                   <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                    <div><label className="label" htmlFor="bairro-gps">Bairro *</label><input id="bairro-gps" className="input" value={d.bairro} onChange={set('bairro')} maxLength={80} placeholder="Digite o bairro" /></div>
+                    <div>
+                      <label className="label" htmlFor="bairro-gps">Seu bairro *</label>
+                      <select id="bairro-gps" className="input" value={bairroManual ? '__outro' : d.bairro}
+                        onChange={(e) => { const v = e.target.value; setBairroManual(v === '__outro'); setD((x) => ({ ...x, bairro: v === '__outro' ? '' : v })) }}>
+                        <option value="" disabled>Escolha o bairro</option>
+                        {bairros.map((b) => <option key={b.nome} value={b.nome}>{b.nome}</option>)}
+                        <option value="__outro">Meu bairro não está na lista</option>
+                      </select>
+                      {bairroManual && <input className="input mt-2" value={d.bairro} onChange={set('bairro')} placeholder="Digite o nome do bairro" maxLength={80} autoFocus />}
+                    </div>
                     <div><label className="label" htmlFor="rua-gps">Rua ou avenida *</label><input id="rua-gps" className="input" value={d.rua} onChange={set('rua')} maxLength={120} placeholder="Digite a rua" /></div>
                   </div>
                 )}
