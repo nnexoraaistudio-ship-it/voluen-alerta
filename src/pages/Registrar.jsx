@@ -52,8 +52,12 @@ export default function Registrar() {
     bairroAtual.current = valor
     setD((x) => ({ ...x, bairro: valor, rua: '', lat: null, lng: null }))
     setLinhas([]); setRuas(null); setBairroInfo(null); setRuaManual(false)
+    if (!valor.trim()) return
+    setGps('Procurando o bairro no mapa…')
     const b = await acharBairro(valor).catch(() => null)
-    if (!b || bairroAtual.current !== valor) return
+    if (bairroAtual.current !== valor) return
+    // Bairro sem posição no mapa (ou serviço fora do ar): a pessoa digita a rua e marca o ponto no mapa.
+    if (!b) { setRuas([]); setRuaManual(true); setGps('Não achamos esse bairro no mapa. Digite a rua e toque no mapa no local exato.'); return }
     setBairroInfo(b); setFoco([b.lat, b.lng])
     setGps('Carregando as ruas do bairro…')
     try {
@@ -209,7 +213,7 @@ export default function Registrar() {
                     )}
                     {(!ruas?.length || ruaManual) && (
                       <input id={ruas?.length ? undefined : 'rua'} className={`input ${ruas?.length ? 'mt-2' : ''}`} value={d.rua} onChange={(e) => setD((x) => ({ ...x, rua: e.target.value }))} onBlur={ruaDigitada}
-                        placeholder={!d.bairro.trim() ? 'Escolha o bairro primeiro' : ruas === null && !bairroManual ? 'Carregando as ruas…' : 'Digite o nome da rua'} maxLength={120} disabled={!d.bairro.trim()} />
+                        placeholder={!d.bairro.trim() ? 'Escolha o bairro primeiro' : ruas === null && !bairroManual ? 'Carregando as ruas… (ou digite aqui)' : 'Digite o nome da rua'} maxLength={120} disabled={!d.bairro.trim()} />
                     )}
                   </div>
                   <div className="sm:col-span-2">

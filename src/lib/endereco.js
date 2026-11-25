@@ -3,7 +3,8 @@
 // - Nominatim: busca de texto livre, só como plano B (no máximo 1 busca por segundo).
 import { BAIRROS } from './constants'
 
-const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']
+// Vários servidores do mesmo serviço: pergunta a todos ao mesmo tempo e usa a primeira resposta.
+const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://overpass.private.coffee/api/interpreter']
 const NOMINATIM = 'https://nominatim.openstreetmap.org/search'
 const S = -5.65, W = -47.62, N = -5.40, E = -47.33 // retângulo em volta de Imperatriz
 const CAIXA = `${S},${W},${N},${E}`
@@ -12,15 +13,18 @@ const TIPOS_RUA = '^(motorway|trunk|primary|secondary|tertiary|unclassified|resi
 export const normalizar = (t) => (t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim()
 
 async function overpass(q) {
-  let ultimoErro
-  for (const url of OVERPASS) {
-    try {
-      const r = await fetch(url, { method: 'POST', body: new URLSearchParams({ data: q }), signal: AbortSignal.timeout(20000) })
+  // Se nenhum servidor responder em 12 segundos, desiste e o site pede para digitar a rua.
+  const ctl = new AbortController()
+  const limite = setTimeout(() => ctl.abort(), 12000)
+  try {
+    return await Promise.any(OVERPASS.map(async (url) => {
+      const r = await fetch(url, { method: 'POST', body: new URLSearchParams({ data: q }), signal: ctl.signal })
       if (!r.ok) throw new Error('overpass ' + r.status)
-      return (await r.json()).elements || []
-    } catch (e) { ultimoErro = e }
-  }
-  throw ultimoErro
+      const j = await r.json()
+      if (j.remark && !j.elements?.length) throw new Error('overpass ' + j.remark)
+      return j.elements || []
+    }))
+  } catch { throw new Error('Serviço de mapas não respondeu.') } finally { clearTimeout(limite); ctl.abort() }
 }
 
 const lerCache = (k) => { try { return JSON.parse(sessionStorage.getItem(k)) } catch { return null } }
@@ -84,7 +88,7 @@ export async function ruasDoBairro(b) {
   const chave = `va-ruas-v1-${normalizar(b.nome)}`
   const cache = lerCache(chave)
   if (cache) return cache
-  const pegar = (filtro) => overpass(`[out:json][timeout:25];${filtro}way["highway"~"${TIPOS_RUA}"]["name"]${b.area && filtro ? '(area.b)' : `(around:900,${b.lat},${b.lng})`};out tags geom;`)
+  const pegar = (filtro) => overpass(`[out:json][timeout:12];${filtro}way["highway"~"${TIPOS_RUA}"]["name"]${b.area && filtro ? '(area.b)' : `(around:900,${b.lat},${b.lng})`};out tags geom;`)
   let el = b.area ? await pegar(`area(${b.area})->.b;`) : []
   if (!el.length) el = await pegar('')
   const ruas = new Map()
@@ -117,7 +121,7 @@ async function buscarTexto(q, caixa) {
   ultima = Date.now()
   const [s, w, n, e] = caixa.split(',').map(Number)
   const p = new URLSearchParams({ q, format: 'jsonv2', limit: '1', countrycodes: 'br', viewbox: `${w},${n},${e},${s}`, bounded: '1', 'accept-language': 'pt-BR' })
-  const r = await fetch(`${NOMINATIM}?${p}`, { headers: { Accept: 'application/json' } })
+  const r = await fetch(`${NOMINATIM}?${p}`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(8000) })
   if (!r.ok) throw new Error('busca indisponível')
   const [res] = await r.json()
   return res ? { lat: Number(res.lat), lng: Number(res.lon) } : null
