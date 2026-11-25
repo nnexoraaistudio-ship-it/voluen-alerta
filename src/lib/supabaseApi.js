@@ -4,7 +4,10 @@
 import { createClient } from '@supabase/supabase-js'
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config'
 
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+// flowType 'pkce': depois do login com Google/Apple o Supabase devolve um ?code= no endereço,
+// que convive bem com o HashRouter (os endereços com #/...).
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { flowType: 'pkce', detectSessionInUrl: true } })
+const CHAVE_VOLTA = 'voluen-login-volta'
 const BUCKET = 'fotos'
 const urlFoto = (path) => (path ? sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl : null)
 const comFoto = (o) => ({ ...o, foto_url: urlFoto(o.foto_path) })
@@ -14,16 +17,64 @@ const checar = ({ data, error }) => { if (error) throw new Error(error.message);
 let perfil = null
 let carregado = false
 const ouvintes = new Set()
+const nomeDoUsuario = (u) => u.user_metadata?.full_name || u.user_metadata?.name || u.user_metadata?.nome || null
+
 async function carregarPerfil(user) {
   if (!user) { perfil = null } else {
     const { data } = await sb.from('perfis').select('id, nome, email, papel').eq('id', user.id).maybeSingle()
-    perfil = data || { id: user.id, email: user.email, nome: user.email, papel: null }
+    const nome = nomeDoUsuario(user)
+    perfil = { id: user.id, email: user.email, papel: null, ...(data || {}) }
+    // O nome que veio do Google/Apple vale mais que o e-mail repetido como nome.
+    if (nome && (!perfil.nome || perfil.nome === perfil.email)) perfil.nome = nome
+    if (!perfil.nome) perfil.nome = perfil.email
   }
   carregado = true
   ouvintes.forEach((f) => f(perfil))
 }
-sb.auth.getSession().then(({ data }) => carregarPerfil(data.session?.user))
-sb.auth.onAuthStateChange((_e, s) => { carregarPerfil(s?.user) })
+
+// Volta da tela do Google/Apple: tira o ?code= (ou o erro) do endereço e leva a pessoa
+// direto para onde ela estava quando tocou no botão.
+let erroLogin = ''
+const busca = new URLSearchParams(window.location.search)
+if (busca.get('error_description') || busca.get('error')) {
+  const msg = busca.get('error_description') || busca.get('error')
+  erroLogin = /signup|sign up|not allowed/i.test(msg)
+    ? 'Não foi possível criar sua conta agora. Tente de novo mais tarde.'
+    : 'Não foi possível entrar. Tente de novo.'
+}
+function limparEndereco() {
+  if (!window.location.search) return
+  window.history.replaceState(null, '', window.location.pathname + window.location.hash)
+}
+function irParaVolta() {
+  let volta = null
+  try { volta = sessionStorage.getItem(CHAVE_VOLTA); sessionStorage.removeItem(CHAVE_VOLTA) } catch { /* nada */ }
+  limparEndereco()
+  if (volta && volta.startsWith('/')) window.location.hash = '#' + volta
+}
+if (erroLogin) { try { sessionStorage.removeItem(CHAVE_VOLTA) } catch { /* nada */ } limparEndereco() }
+
+sb.auth.getSession().then(({ data }) => {
+  if (data.session && busca.get('code')) irParaVolta()
+  carregarPerfil(data.session?.user)
+})
+sb.auth.onAuthStateChange((e, s) => {
+  if (e === 'SIGNED_IN' && busca.get('code')) irParaVolta()
+  carregarPerfil(s?.user)
+})
+
+// Quais botões mostrar: o próprio Supabase diz quais provedores estão ligados.
+// Assim os botões aparecem sozinhos quando o Google (ou a Apple) é ativado no painel do Supabase.
+let provedoresCache = null
+function lerProvedores() {
+  if (!provedoresCache) {
+    provedoresCache = fetch(`${SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: SUPABASE_ANON_KEY } })
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((j) => ({ google: !!j.external?.google, apple: !!j.external?.apple }))
+      .catch(() => ({ google: false, apple: false }))
+  }
+  return provedoresCache
+}
 
 export const supabaseApi = {
   modo: 'real',
@@ -54,6 +105,16 @@ export const supabaseApi = {
     checar(await sb.auth.signInWithPassword({ email, password: senha }))
   },
   async sair() { await sb.auth.signOut() },
+  provedores: lerProvedores,
+  erroLogin: () => { const e = erroLogin; erroLogin = ''; return e },
+  async entrarCom(provedor, volta) {
+    try { sessionStorage.setItem(CHAVE_VOLTA, volta || '/') } catch { /* nada */ }
+    checar(await sb.auth.signInWithOAuth({
+      provider: provedor,
+      options: { redirectTo: window.location.origin + window.location.pathname },
+    }))
+  },
+  async minhasOcorrencias() { return checar(await sb.rpc('minhas_ocorrencias')) || [] },
   async listarTodas() {
     return checar(await sb.from('ocorrencias').select(COLUNAS_EQUIPE).order('created_at', { ascending: false })).map(comFoto)
   },
@@ -70,6 +131,9 @@ export const supabaseApi = {
   },
   async verContato(id) { return checar(await sb.rpc('ver_contato', { p_id: id })) },
   async apagarContato(id) { checar(await sb.rpc('apagar_contato', { p_id: id })) },
-  async listarEquipe() { return checar(await sb.from('perfis').select('id, nome, email, papel').order('nome')) },
+  async listarEquipe() { return checar(await sb.from('perfis').select('id, nome, email, papel').not('papel', 'is', null).order('nome')) },
+  async acharPorEmail(email) {
+    return checar(await sb.from('perfis').select('id, nome, email, papel').ilike('email', email.trim().replace(/[%_\\]/g, '\\$&')).limit(1).maybeSingle())
+  },
   async mudarPapel(uid, papel) { checar(await sb.from('perfis').update({ papel }).eq('id', uid)) },
 }

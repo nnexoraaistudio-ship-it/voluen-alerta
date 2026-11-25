@@ -3,6 +3,21 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Logo, Icone } from './ui'
 import { VoluenMarca } from './Marca'
 import { MODO_DEMO, CONTATO_EMAIL } from '../config'
+import { useSessao } from '../lib/hooks'
+import { useProvedores } from './EntrarSocial'
+
+// Botão da conta no topo: "Entrar" (quando o login com Google/Apple está ligado) ou o primeiro nome.
+function BotaoConta() {
+  const { perfil } = useSessao()
+  const prov = useProvedores()
+  if (!perfil && !prov.google && !prov.apple) return null
+  const primeiro = perfil?.nome?.split(/[\s@]/)[0]
+  return (
+    <Link to="/conta" className="flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-medium text-slate-600 hover:text-deep" aria-label={perfil ? `Minha conta (${perfil.nome})` : 'Entrar'}>
+      <Icone.pessoa /><span className="max-w-[9rem] truncate">{perfil ? primeiro : 'Entrar'}</span>
+    </Link>
+  )
+}
 
 const NAV = [
   { to: '/', nome: 'Início', icone: Icone.casa, fim: true },
@@ -21,8 +36,11 @@ function Topo() {
             <NavLink key={n.to} to={n.to} end={n.fim} className={({ isActive }) => `rounded-full px-4 py-2 text-sm font-medium transition ${isActive ? 'bg-brand-50 text-brand' : 'text-slate-600 hover:text-deep'}`}>{n.nome}</NavLink>
           ))}
         </nav>
-        <Link to="/sobre" className="rounded-full px-3 py-2 text-sm font-medium text-slate-600 hover:text-deep md:hidden">Sobre</Link>
-        <Link to="/registrar" className="btn-dark hidden md:inline-flex"><Icone.mais /> Registrar problema</Link>
+        <div className="flex items-center gap-1">
+          <Link to="/sobre" className="rounded-full px-3 py-2 text-sm font-medium text-slate-600 hover:text-deep md:hidden">Sobre</Link>
+          <BotaoConta />
+          <Link to="/registrar" className="btn-dark hidden md:inline-flex"><Icone.mais /> Registrar problema</Link>
+        </div>
       </div>
     </header>
   )

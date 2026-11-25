@@ -90,7 +90,7 @@ export const demoApi = {
     const id = 'demo-' + Date.now()
     const agora = new Date().toISOString()
     const protocolo = `VA-2026-${String(s.seq++).padStart(5, '0')}`
-    s.ocorrencias.unshift({ id, protocolo, ...d, foto_url: foto ? foto.previa : null, status: 'moderacao', motivo_recusa: null, consentimento_em: agora, created_at: agora, resolvida_em: null })
+    s.ocorrencias.unshift({ id, protocolo, ...d, cidadao_id: sessao && !sessao.papel ? sessao.id : null, foto_url: foto ? foto.previa : null, status: 'moderacao', motivo_recusa: null, consentimento_em: agora, created_at: agora, resolvida_em: null })
     s.historico.push({ id: id + '-h0', ocorrencia_id: id, status: 'moderacao', mensagem: null, created_at: agora })
     salvar(s)
     return { protocolo }
@@ -119,6 +119,22 @@ export const demoApi = {
     ouvintes.forEach((f) => f(sessao))
     return u
   },
+  // Login com Google/Apple no modo demonstração: entra como um morador de exemplo.
+  async provedores() { return { google: true, apple: true } },
+  erroLogin: () => '',
+  async entrarCom(provedor, volta) {
+    await espera()
+    sessao = { id: 'demo-morador', nome: 'Morador de exemplo', email: `morador@${provedor}.exemplo`, papel: null }
+    try { sessionStorage.setItem(CHAVE + '-sessao', JSON.stringify(sessao)) } catch { /* nada */ }
+    ouvintes.forEach((f) => f(sessao))
+    if (volta) window.location.hash = '#' + volta
+  },
+  async minhasOcorrencias() {
+    if (!sessao) return []
+    return ler().ocorrencias.filter((o) => o.cidadao_id === sessao.id)
+      .map(({ protocolo, categoria, bairro, rua, status, created_at }) => ({ protocolo, categoria, bairro, rua, status, created_at }))
+  },
+  async acharPorEmail(email) { return ler().equipe.find((u) => u.email.toLowerCase() === email.trim().toLowerCase()) || null },
   async sair() { sessao = null; try { sessionStorage.removeItem(CHAVE + '-sessao') } catch { /* nada */ } ouvintes.forEach((f) => f(null)) },
   async listarTodas() {
     await espera()

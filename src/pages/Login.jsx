@@ -5,6 +5,7 @@ import { useSessao } from '../lib/hooks'
 import { PAPEIS } from '../lib/constants'
 import { Logo, Carregando } from '../components/ui'
 import { MODO_DEMO } from '../config'
+import EntrarSocial, { useProvedores } from '../components/EntrarSocial'
 
 export default function Login() {
   const { perfil, carregado } = useSessao()
@@ -12,6 +13,8 @@ export default function Login() {
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const prov = useProvedores()
+  const temSocial = !MODO_DEMO && (prov.google || prov.apple)
   if (!carregado) return <div className="wrap"><Carregando /></div>
   if (perfil) return <Navigate to="/painel" replace />
 
@@ -41,12 +44,21 @@ export default function Login() {
               ))}
             </div>
           ) : (
-            <form onSubmit={entrar} className="mt-6 space-y-4">
+            <>
+            {temSocial && (
+              <div className="mt-6">
+                <EntrarSocial volta="/painel" />
+                <p className="mt-3 text-xs text-slate-500">Use a mesma conta do e-mail cadastrado pela equipe. Entrar com Google ou Apple não libera o painel sozinho: um administrador precisa ter dado a sua função.</p>
+                <div className="my-5 flex items-center gap-3 text-xs font-medium text-slate-400"><span className="h-px flex-1 bg-slate-200" />ou com e-mail e senha<span className="h-px flex-1 bg-slate-200" /></div>
+              </div>
+            )}
+            <form onSubmit={entrar} className={`${temSocial ? '' : 'mt-6 '}space-y-4`}>
               <div><label className="label" htmlFor="em">E-mail</label><input id="em" type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" /></div>
               <div><label className="label" htmlFor="pw">Senha</label><input id="pw" type="password" className="input" value={senha} onChange={(e) => setSenha(e.target.value)} required autoComplete="current-password" /></div>
               <button className="btn-brand w-full py-3" disabled={enviando}>{enviando ? 'Entrando…' : 'Entrar'}</button>
               <p className="text-xs text-slate-500">Não tem acesso? Peça a um administrador da Voluen para cadastrar você.</p>
             </form>
+            </>
           )}
           {erro && <div className="mt-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-800" role="alert">{erro}</div>}
         </div>

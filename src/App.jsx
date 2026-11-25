@@ -7,6 +7,7 @@ import Acompanhar from './pages/Acompanhar'
 import Privacidade from './pages/Privacidade'
 import Sobre from './pages/Sobre'
 import Login from './pages/Login'
+import Conta from './pages/Conta'
 import PainelLayout from './pages/painel/PainelLayout'
 import Visao from './pages/painel/Visao'
 import Moderacao from './pages/painel/Moderacao'
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="acompanhar/:protocolo" element={<Acompanhar />} />
           <Route path="privacidade" element={<Privacidade />} />
           <Route path="sobre" element={<Sobre />} />
+          <Route path="conta" element={<Conta />} />
         </Route>
         <Route path="equipe" element={<Login />} />
         <Route path="painel" element={<PainelLayout />}>
