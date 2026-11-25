@@ -1,8 +1,8 @@
 // MODO DEMONSTRAÇÃO: tudo fica guardado no navegador (localStorage).
 // Serve para apresentar e testar o site antes de ligar o banco de dados real.
-import { CATEGORIAS } from './constants'
+import { CATEGORIAS, MOTIVOS_RECUSA } from './constants'
 
-const CHAVE = 'voluen-alerta-demo-v1'
+const CHAVE = 'voluen-alerta-demo-v2'
 const BASE = {
   Centro: [-5.5265, -47.479], 'Beira Rio': [-5.523, -47.4865], Mercadinho: [-5.518, -47.476], Juçara: [-5.534, -47.474],
   Bacuri: [-5.5405, -47.478], 'Nova Imperatriz': [-5.515, -47.465], 'Santa Rita': [-5.505, -47.47], 'Vila Lobão': [-5.53, -47.458],
@@ -62,7 +62,52 @@ function semente() {
     if (['encaminhada', 'resolvida'].includes(status)) historico.push({ id: id + '-h3', ocorrencia_id: id, status: 'encaminhada', mensagem: 'Caso enviado à Secretaria de Obras.', created_at: new Date(new Date(criado).getTime() + 1.5 * 86400000).toISOString() })
     if (status === 'resolvida') historico.push({ id: id + '-h4', ocorrencia_id: id, status: 'resolvida', mensagem: 'Limpeza concluída. Obrigado pelo aviso.', created_at: o.resolvida_em })
   })
+  n = historicoDeExemplo(agora, n, ocorrencias, historico)
   return { seq: n, ocorrencias, historico, equipe: EQUIPE_DEMO }
+}
+
+// Avisos antigos (últimos 14 meses) para o relatório mensal, trimestral, semestral e anual
+// terem com o que comparar. Mais avisos de dezembro a abril (período de chuvas em Imperatriz).
+function historicoDeExemplo(agora, n, ocorrencias, historico) {
+  let semente = 20261125
+  const sorte = () => { semente = (semente * 1103515245 + 12345) % 2147483648; return semente / 2147483648 }
+  const escolher = (l) => l[Math.floor(sorte() * l.length)]
+  const locais = AMOSTRAS.map(([categoria, bairro, rua]) => [categoria, bairro, rua])
+  const pesados = [...locais, ...locais.slice(0, 8), ...locais.slice(0, 4), locais[0], locais[3], locais[5]]
+  const CHUVA = [1.9, 2.1, 2.2, 1.8, 1.1, 0.5, 0.3, 0.3, 0.4, 0.6, 0.9, 1.5]
+  const hoje = new Date(agora)
+  for (let m = 14; m >= 0; m--) {
+    const ini = new Date(hoje.getFullYear(), hoje.getMonth() - m, 1)
+    const fimMes = m === 0 ? new Date(agora - 22 * 86400000) : new Date(ini.getFullYear(), ini.getMonth() + 1, 1)
+    if (fimMes <= ini) continue
+    const qtd = Math.round(CHUVA[ini.getMonth()] * (15 + sorte() * 7))
+    for (let k = 0; k < qtd; k++) {
+      const [categoria, bairro, rua] = escolher(pesados)
+      const criado = new Date(ini.getTime() + sorte() * (fimMes - ini))
+      const id = `demo-h${n}`
+      const r = sorte()
+      const status = r < 0.08 ? 'recusada' : r < 0.84 || m > 1 ? 'resolvida' : r < 0.92 ? 'encaminhada' : 'em_analise'
+      const [lat, lng] = BASE[bairro]
+      const tRecebida = criado.getTime() + (1 + sorte() * 5) * 3600000
+      const tAnalise = tRecebida + (4 + sorte() * (m > 6 ? 60 : 30)) * 3600000
+      const tEnc = tAnalise + (6 + sorte() * 30) * 3600000
+      const tRes = tEnc + (1 + sorte() * (m > 6 ? 9 : 5)) * 86400000
+      ocorrencias.push({
+        id, protocolo: `VA-${criado.getFullYear()}-${String(n++).padStart(5, '0')}`, categoria, bairro, rua, referencia: '', descricao: 'Aviso de exemplo (histórico).',
+        lat: lat + (sorte() - 0.5) / 160, lng: lng + (sorte() - 0.5) / 160, foto_url: null, contato_nome: '', contato_telefone: '', contato_email: '',
+        status, motivo_recusa: status === 'recusada' ? escolher(MOTIVOS_RECUSA) : null, consentimento_em: criado.toISOString(), created_at: criado.toISOString(),
+        resolvida_em: status === 'resolvida' ? new Date(tRes).toISOString() : null,
+      })
+      const h = (st, t) => historico.push({ id: `${id}-${st}`, ocorrencia_id: id, status: st, mensagem: null, created_at: new Date(t).toISOString() })
+      h('moderacao', criado.getTime())
+      if (status === 'recusada') { h('recusada', tRecebida); continue }
+      h('recebida', tRecebida); h('em_analise', tAnalise)
+      if (status !== 'em_analise') h('encaminhada', tEnc)
+      if (status === 'resolvida') h('resolvida', tRes)
+    }
+  }
+  ocorrencias.sort((a, b) => b.created_at.localeCompare(a.created_at))
+  return n
 }
 
 const EQUIPE_DEMO = [
@@ -151,6 +196,10 @@ export const demoApi = {
     if (sessao?.papel !== 'admin') throw new Error('Somente administradores veem os dados de contato.')
     const o = ler().ocorrencias.find((x) => x.id === id)
     return { nome: o.contato_nome || null, telefone: o.contato_telefone || null, email: o.contato_email || null }
+  },
+  async historicoResumo(ids) {
+    const q = new Set(ids)
+    return ler().historico.filter((h) => q.has(h.ocorrencia_id)).map(({ ocorrencia_id, status, created_at }) => ({ ocorrencia_id, status, created_at }))
   },
   async historico(id) { return ler().historico.filter((h) => h.ocorrencia_id === id).sort((a, b) => a.created_at.localeCompare(b.created_at)) },
   async mudarStatus(id, status, mensagem, motivo) {
