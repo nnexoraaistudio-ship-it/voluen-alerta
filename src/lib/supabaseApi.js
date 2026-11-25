@@ -132,6 +132,14 @@ export const supabaseApi = {
       options: { redirectTo: window.location.origin + window.location.pathname },
     }))
   },
+  // Avisa o painel quando entra algo novo no histórico (ocorrência nova ou mudança de situação).
+  // Precisa da tabela historico na publicação do Realtime (supabase/tempo-real.sql).
+  aoMudarOcorrencias(fn) {
+    const canal = sb.channel('painel-historico')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'historico' }, () => fn())
+      .subscribe()
+    return () => { sb.removeChannel(canal) }
+  },
   async minhasOcorrencias() { return checar(await sb.rpc('minhas_ocorrencias')) || [] },
   async listarTodas() {
     return checar(await sb.from('ocorrencias').select(COLUNAS_EQUIPE).order('created_at', { ascending: false })).map(comFoto)
