@@ -47,7 +47,7 @@ export default function PainelLayout() {
     { to: '/painel', nome: 'Visão geral', fim: true },
     { to: '/painel/moderacao', nome: 'Moderação', badge: pend },
     { to: '/painel/ocorrencias', nome: 'Ocorrências' },
-    { to: '/painel/relatorio', nome: 'Relatório mensal' },
+    { to: '/painel/relatorio', nome: 'Relatórios' },
     ...(pode.equipe(perfil.papel) ? [{ to: '/painel/equipe', nome: 'Equipe' }] : []),
   ]
 

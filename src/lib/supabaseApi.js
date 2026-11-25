@@ -136,6 +136,14 @@ export const supabaseApi = {
   async listarTodas() {
     return checar(await sb.from('ocorrencias').select(COLUNAS_EQUIPE).order('created_at', { ascending: false })).map(comFoto)
   },
+  // Para o relatório: só situação e data de cada mudança (sem mensagens nem autor).
+  async historicoResumo(ids) {
+    const r = []
+    for (let i = 0; i < ids.length; i += 150) {
+      r.push(...checar(await sb.from('historico').select('ocorrencia_id, status, created_at').in('ocorrencia_id', ids.slice(i, i + 150))))
+    }
+    return r
+  },
   async historico(id) {
     return checar(await sb.from('historico').select('*').eq('ocorrencia_id', id).order('created_at'))
   },

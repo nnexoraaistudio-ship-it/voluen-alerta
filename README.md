@@ -1,7 +1,7 @@
 # Voluen Alerta · Imperatriz-MA
 
 Canal para moradores avisarem sobre alagamentos, bueiros entupidos e problemas de drenagem,
-e painel para a equipe da Prefeitura moderar, acompanhar e gerar o relatório mensal.
+e painel para a equipe da Prefeitura moderar, acompanhar e gerar relatórios em PDF (mensal, trimestral, semestral e anual).
 
 Desenvolvido pela **Voluen** · Tecnologia para cidades que evoluem.
 
@@ -10,7 +10,7 @@ Desenvolvido pela **Voluen** · Tecnologia para cidades que evoluem.
 | Parte | O que faz |
 | --- | --- |
 | Site do morador | Registrar ocorrência (5 passos), mapa público, consulta por protocolo, política de privacidade |
-| Painel da equipe (`#/equipe`) | Login, moderação, mudança de situação com recado ao morador, relatório mensal, gestão da equipe |
+| Painel da equipe (`#/equipe`) | Login, moderação, mudança de situação com recado ao morador, relatórios em PDF (mensal, trimestral, semestral e anual), gestão da equipe |
 | Banco de dados | Supabase (servidor em São Paulo). Regras de segurança em `supabase/schema.sql` |
 | Hospedagem | GitHub Pages, publicado automaticamente a cada mudança na branch `main` |
 
