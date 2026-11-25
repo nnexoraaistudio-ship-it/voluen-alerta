@@ -134,6 +134,13 @@ export const demoApi = {
     return ler().ocorrencias.filter((o) => o.cidadao_id === sessao.id)
       .map(({ protocolo, categoria, bairro, rua, status, created_at }) => ({ protocolo, categoria, bairro, rua, status, created_at }))
   },
+  async entrarCpf() { throw new Error('No modo demonstração, escolha um perfil acima.') },
+  async trocarSenha() {},
+  async criarMembro({ nome, cpf, papel }) {
+    const s = ler(); const id = 'u-' + Date.now()
+    s.equipe.push({ id, nome, cpf: cpf.replace(/\D/g, ''), email: '', papel }); salvar(s); return id
+  },
+  async redefinirSenha() {},
   async acharPorEmail(email) { return ler().equipe.find((u) => u.email.toLowerCase() === email.trim().toLowerCase()) || null },
   async sair() { sessao = null; try { sessionStorage.removeItem(CHAVE + '-sessao') } catch { /* nada */ } ouvintes.forEach((f) => f(null)) },
   async listarTodas() {

@@ -39,6 +39,8 @@ export default function PainelLayout() {
     </div>
   )
 
+  if (perfil.trocar_senha) return <TrocarSenha perfil={perfil} />
+
   const lista = dados.dados || []
   const pend = lista.filter((o) => o.status === 'moderacao').length
   const links = [
@@ -78,5 +80,35 @@ export default function PainelLayout() {
       </div>
       {aberto && <Detalhe id={aberto} fechar={() => setAberto(null)} />}
     </PainelCtx.Provider>
+  )
+}
+
+// Primeiro acesso com senha provisória: a pessoa cria a própria senha antes de usar o painel.
+function TrocarSenha({ perfil }) {
+  const [nova, setNova] = useState('')
+  const [repete, setRepete] = useState('')
+  const [erro, setErro] = useState('')
+  const [indo, setIndo] = useState(false)
+  async function salvar(e) {
+    e.preventDefault(); setErro('')
+    if (nova.length < 8) { setErro('A senha precisa ter pelo menos 8 caracteres.'); return }
+    if (nova !== repete) { setErro('As duas senhas não são iguais.'); return }
+    setIndo(true)
+    try { await api.trocarSenha(nova) } catch (x) { setErro(/same|different/i.test(x.message) ? 'A senha nova precisa ser diferente da provisória.' : x.message) } finally { setIndo(false) }
+  }
+  return (
+    <div className="grid min-h-screen place-items-center bg-mist p-6">
+      <form onSubmit={salvar} className="card w-full max-w-md space-y-4 p-8">
+        <div>
+          <h1 className="text-xl font-semibold">Crie a sua senha</h1>
+          <p className="mt-1 text-sm text-slate-600">Olá, {perfil.nome}. Você entrou com uma senha provisória. Crie agora uma senha só sua, com pelo menos 8 caracteres.</p>
+        </div>
+        <div><label className="label" htmlFor="nova">Senha nova</label><input id="nova" type="password" className="input" value={nova} onChange={(e) => setNova(e.target.value)} required autoComplete="new-password" /></div>
+        <div><label className="label" htmlFor="rep">Repita a senha nova</label><input id="rep" type="password" className="input" value={repete} onChange={(e) => setRepete(e.target.value)} required autoComplete="new-password" /></div>
+        {erro && <p className="rounded-xl bg-rose-50 p-3 text-sm text-rose-800" role="alert">{erro}</p>}
+        <button className="btn-brand w-full py-3" disabled={indo}>{indo ? 'Salvando…' : 'Salvar e entrar'}</button>
+        <button type="button" onClick={() => api.sair()} className="btn-ghost w-full">Sair</button>
+      </form>
+    </div>
   )
 }

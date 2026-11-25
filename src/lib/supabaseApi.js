@@ -3,6 +3,7 @@
 // não aqui. Mesmo que alguém mexa neste código, o banco recusa o que não é permitido.
 import { createClient } from '@supabase/supabase-js'
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config'
+import { cpfValido, emailDoCpf, soDigitos } from './cpf'
 
 // flowType 'pkce': depois do login com Google/Apple o Supabase devolve um ?code= no endereço,
 // que convive bem com o HashRouter (os endereços com #/...).
@@ -21,7 +22,9 @@ const nomeDoUsuario = (u) => u.user_metadata?.full_name || u.user_metadata?.name
 
 async function carregarPerfil(user) {
   if (!user) { perfil = null } else {
-    const { data } = await sb.from('perfis').select('id, nome, email, papel').eq('id', user.id).maybeSingle()
+    let { data, error } = await sb.from('perfis').select('id, nome, email, papel, cpf, trocar_senha').eq('id', user.id).maybeSingle()
+    // Banco ainda sem as colunas de CPF (login-cpf.sql não rodado): segue com o básico.
+    if (error) ({ data } = await sb.from('perfis').select('id, nome, email, papel').eq('id', user.id).maybeSingle())
     const nome = nomeDoUsuario(user)
     perfil = { id: user.id, email: user.email, papel: null, ...(data || {}) }
     // O nome que veio do Google/Apple vale mais que o e-mail repetido como nome.
@@ -104,6 +107,21 @@ export const supabaseApi = {
   async entrar(email, senha) {
     checar(await sb.auth.signInWithPassword({ email, password: senha }))
   },
+  async entrarCpf(cpf, senha) {
+    if (!cpfValido(cpf)) throw new Error('CPF inválido. Confira os números.')
+    const { error } = await sb.auth.signInWithPassword({ email: emailDoCpf(cpf), password: senha })
+    if (error) throw new Error(/Invalid login/i.test(error.message) ? 'CPF ou senha incorretos.' : error.message)
+  },
+  async trocarSenha(nova) {
+    checar(await sb.auth.updateUser({ password: nova }))
+    checar(await sb.rpc('senha_trocada'))
+    const { data } = await sb.auth.getUser()
+    await carregarPerfil(data.user)
+  },
+  async criarMembro({ nome, cpf, papel, senha }) {
+    return checar(await sb.rpc('criar_membro', { p_nome: nome, p_cpf: soDigitos(cpf), p_papel: papel, p_senha: senha }))
+  },
+  async redefinirSenha(uid, senha) { checar(await sb.rpc('redefinir_senha', { p_uid: uid, p_senha: senha })) },
   async sair() { await sb.auth.signOut() },
   provedores: lerProvedores,
   erroLogin: () => { const e = erroLogin; erroLogin = ''; return e },
@@ -131,7 +149,11 @@ export const supabaseApi = {
   },
   async verContato(id) { return checar(await sb.rpc('ver_contato', { p_id: id })) },
   async apagarContato(id) { checar(await sb.rpc('apagar_contato', { p_id: id })) },
-  async listarEquipe() { return checar(await sb.from('perfis').select('id, nome, email, papel').not('papel', 'is', null).order('nome')) },
+  async listarEquipe() {
+    const r = await sb.from('perfis').select('id, nome, email, papel, cpf').not('papel', 'is', null).order('nome')
+    if (!r.error) return r.data
+    return checar(await sb.from('perfis').select('id, nome, email, papel').not('papel', 'is', null).order('nome'))
+  },
   async acharPorEmail(email) {
     return checar(await sb.from('perfis').select('id, nome, email, papel').ilike('email', email.trim().replace(/[%_\\]/g, '\\$&')).limit(1).maybeSingle())
   },
