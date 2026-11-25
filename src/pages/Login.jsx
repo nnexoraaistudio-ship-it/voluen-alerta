@@ -18,13 +18,39 @@ function Fundo() {
           <stop offset="1" stopColor="#072B5A" stopOpacity="0" />
         </radialGradient>
         <pattern id="malha" width="64" height="64" patternUnits="userSpaceOnUse" patternTransform="rotate(-8)">
-          <path d="M64 0H0V64" fill="none" stroke="#F3F6FA" strokeOpacity=".045" strokeWidth="1" />
+          <path d="M64 0H0V64" fill="none" stroke="#F3F6FA" strokeOpacity=".06" strokeWidth="1" />
         </pattern>
       </defs>
       <rect width="1440" height="900" fill="url(#brilho)" />
       <rect width="1440" height="900" fill="url(#malha)" />
       <path d="M-40 640 C 220 560, 360 700, 600 610 S 980 470, 1180 560 S 1420 650, 1500 600" fill="none" stroke="#2BB3E6" strokeOpacity=".16" strokeWidth="2" />
       <path d="M-40 668 C 220 588, 360 728, 600 638 S 980 498, 1180 588 S 1420 678, 1500 628" fill="none" stroke="#2BB3E6" strokeOpacity=".08" strokeWidth="1.5" />
+      {/* Ruas principais em branco, bem finas */}
+      <g fill="none" stroke="#FFFFFF" strokeLinecap="round">
+        <path d="M120 -20 L 360 920" strokeOpacity=".10" strokeWidth="1.5" />
+        <path d="M-20 300 L 1460 120" strokeOpacity=".08" strokeWidth="1.5" />
+        <path d="M640 -20 C 700 260, 660 520, 760 920" strokeOpacity=".09" strokeWidth="1.5" />
+        <path d="M-20 820 L 1460 700" strokeOpacity=".07" strokeWidth="1.2" />
+        <path d="M1020 -20 L 900 920" strokeOpacity=".07" strokeWidth="1.2" />
+      </g>
+      {/* Ondas de sinal brancas no canto de cima */}
+      <g fill="none" stroke="#FFFFFF" strokeLinecap="round" transform="translate(250 150)">
+        {[40, 80, 120].map((r, i) => (
+          <path key={r} d={`M ${-r * 0.71} ${-r * 0.71} A ${r} ${r} 0 0 1 ${r * 0.71} ${-r * 0.71}`} strokeOpacity={0.22 - i * 0.06} strokeWidth="2" />
+        ))}
+        <circle r="5" fill="#FFFFFF" fillOpacity=".5" stroke="none" />
+      </g>
+      {/* Pontos brancos, como registros no mapa */}
+      <g fill="#FFFFFF">
+        {[[560, 210, 4, .35], [780, 330, 3, .3], [700, 140, 2.5, .25], [610, 470, 3, .25], [840, 520, 4, .3],
+          [520, 720, 3, .25], [880, 780, 2.5, .2], [380, 830, 2.5, .2], [1120, 260, 3, .25], [1300, 420, 2.5, .2], [110, 760, 3, .2], [760, 620, 2, .3]]
+          .map(([x, y, r, o]) => (
+            <g key={`${x}-${y}`}>
+              <circle cx={x} cy={y} r={r * 3.2} fillOpacity={o * 0.18} />
+              <circle cx={x} cy={y} r={r} fillOpacity={o * 1.6} />
+            </g>
+          ))}
+      </g>
       <g fill="none" stroke="#2BB3E6" strokeLinecap="round" transform="translate(1180 760)">
         {[90, 170, 250, 330, 410].map((r, i) => (
           <path key={r} d={`M ${-r * 0.71} ${-r * 0.71} A ${r} ${r} 0 0 1 ${r * 0.71} ${-r * 0.71}`} strokeOpacity={0.22 - i * 0.04} strokeWidth="2" />

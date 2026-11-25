@@ -24,7 +24,10 @@ export const MOTIVOS_RECUSA = [
   'Não é um problema de drenagem. Procure o setor responsável.',
   'Informações insuficientes para localizar o problema.',
   'Conteúdo impróprio ou que não respeita outras pessoas.',
+  'O local informado fica fora de Imperatriz.',
+  'A foto não mostra o problema ou mostra rostos e placas de veículos.',
 ]
+export const OUTRO_MOTIVO = 'Outro motivo (escrever)'
 
 export const PAPEIS = {
   moderador: { nome: 'Moderador', desc: 'Confere e aprova ou recusa as ocorrências novas.' },

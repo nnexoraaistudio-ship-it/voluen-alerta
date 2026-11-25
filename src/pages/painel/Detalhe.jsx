@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../lib/api'
-import { CATEGORIAS, STATUS, FLUXO, MOTIVOS_RECUSA, pode } from '../../lib/constants'
+import { CATEGORIAS, STATUS, FLUXO, MOTIVOS_RECUSA, OUTRO_MOTIVO, pode } from '../../lib/constants'
 import { dataHora } from '../../lib/format'
 import { Icone, StatusPill } from '../../components/ui'
 import Mapa from '../../components/Mapa'
@@ -13,6 +13,7 @@ export default function Detalhe({ id, fechar }) {
   const [novo, setNovo] = useState('')
   const [msg, setMsg] = useState('')
   const [recusando, setRecusando] = useState(false)
+  const [motivoLivre, setMotivoLivre] = useState('')
   const [motivo, setMotivo] = useState(MOTIVOS_RECUSA[0])
   const [ocupado, setOcupado] = useState(false)
   const [aviso, setAviso] = useState('')
@@ -57,9 +58,12 @@ export default function Detalhe({ id, fechar }) {
               ) : (
                 <div className="mt-3 space-y-2">
                   <label className="label" htmlFor="mot">Motivo (o morador verá)</label>
-                  <select id="mot" className="input" value={motivo} onChange={(e) => setMotivo(e.target.value)}>{MOTIVOS_RECUSA.map((m) => <option key={m}>{m}</option>)}</select>
+                  <select id="mot" className="input" value={motivo} onChange={(e) => setMotivo(e.target.value)}>{[...MOTIVOS_RECUSA, OUTRO_MOTIVO].map((m) => <option key={m}>{m}</option>)}</select>
+                  <label className="label" htmlFor="just">{motivo === OUTRO_MOTIVO ? 'Escreva o motivo (obrigatório)' : 'Justificativa para o morador (opcional)'}</label>
+                  <textarea id="just" className="input min-h-[80px]" maxLength={400} placeholder={motivo === OUTRO_MOTIVO ? 'Explique com educação por que o aviso não foi publicado.' : 'Ex.: Já existe o protocolo VA-2026-00012 para este mesmo bueiro.'} value={motivoLivre} onChange={(e) => setMotivoLivre(e.target.value)} />
+                  <p className="text-xs text-amber-900/80">Se o morador deixou e-mail, ele recebe um aviso com este motivo.</p>
                   <div className="flex gap-2">
-                    <button disabled={ocupado} onClick={() => fazer(() => api.mudarStatus(o.id, 'recusada', null, motivo), 'Ocorrência recusada. O morador vê o motivo no protocolo.')} className="btn bg-rose-600 text-white hover:bg-rose-700">Confirmar recusa</button>
+                    <button disabled={ocupado || (motivo === OUTRO_MOTIVO && motivoLivre.trim().length < 5)} onClick={() => fazer(() => api.mudarStatus(o.id, 'recusada', null, motivo === OUTRO_MOTIVO ? motivoLivre.trim() : [motivo, motivoLivre.trim()].filter(Boolean).join(' ')), 'Ocorrência recusada. O morador vê o motivo no protocolo e recebe por e-mail, se deixou um.')} className="btn bg-rose-600 text-white hover:bg-rose-700">Confirmar recusa</button>
                     <button onClick={() => setRecusando(false)} className="btn-ghost">Cancelar</button>
                   </div>
                 </div>
