@@ -56,7 +56,7 @@ begin
     when 'em_analise'  then 'A equipe da Prefeitura está analisando o seu aviso.'
     when 'encaminhada' then 'O seu aviso foi encaminhado para o setor responsável.'
     when 'resolvida'   then 'O problema que você informou foi marcado como resolvido. Obrigado por ajudar a cidade!'
-    when 'recusada'    then 'O seu aviso não pôde ser publicado.'
+    when 'recusada'    then 'A equipe conferiu o seu aviso e, desta vez, ele não pôde ser publicado no mapa. Veja abaixo o motivo.'
     else 'A situação do seu aviso mudou.' end;
 
   -- Modelo do e-mail com a marca (cores e logo da Voluen). O logo fica hospedado no próprio site.
@@ -71,13 +71,20 @@ begin
     || '<tr><td style="padding:24px 28px 8px">'
     ||   '<h1 style="margin:0 0 12px;font-size:22px;line-height:1.3;color:#072B5A">' || html_seguro(v_titulo) || '</h1>'
     ||   '<p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#33445C">' || html_seguro(v_texto) || '</p>'
-    ||   case when nullif(trim(p_mensagem), '') is not null
+    ||   case when p_status = 'recusada'
+           then '<div style="margin:0 0 16px;background:#FFF1F2;border-left:4px solid #E11D48;padding:12px 14px;border-radius:8px;font-size:14px;line-height:1.5;color:#33445C"><b style="color:#9F1239">Motivo:</b><br>'
+                || html_seguro(coalesce(nullif(trim(p_mensagem), ''), nullif(trim(o.motivo_recusa), ''), 'Não informado.')) || '</div>'
+                || '<p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#33445C"><b style="color:#072B5A">O que fazer agora?</b> Se o problema continua, você pode registrar de novo com mais detalhes: o local exato, uma foto clara e uma boa descrição ajudam a equipe a aprovar. Se tiver dúvida, é só responder a este e-mail.</p>'
+         when nullif(trim(p_mensagem), '') is not null
            then '<div style="margin:0 0 16px;background:#F3F6FA;border-left:4px solid #2BB3E6;padding:12px 14px;border-radius:8px;font-size:14px;line-height:1.5;color:#33445C"><b style="color:#072B5A">Mensagem da equipe:</b><br>' || html_seguro(p_mensagem) || '</div>' else '' end
     ||   '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px;font-size:14px;color:#33445C">'
     ||     '<tr><td style="padding:2px 12px 2px 0;color:#5A6B85">Protocolo</td><td style="font-family:Consolas,monospace;font-weight:bold;color:#072B5A">' || html_seguro(o.protocolo) || '</td></tr>'
     ||     '<tr><td style="padding:2px 12px 2px 0;color:#5A6B85">Local</td><td>' || html_seguro(o.rua) || ', ' || html_seguro(o.bairro) || '</td></tr>'
     ||   '</table>'
-    ||   '<a href="' || v_link || '" style="display:inline-block;background:#0B4DA2;color:#ffffff;padding:12px 22px;border-radius:999px;text-decoration:none;font-weight:bold;font-size:15px">Acompanhar meu aviso</a>'
+    ||   case when p_status = 'recusada'
+           then '<a href="' || v_site || '#/registrar" style="display:inline-block;background:#0B4DA2;color:#ffffff;padding:12px 22px;border-radius:999px;text-decoration:none;font-weight:bold;font-size:15px">Registrar de novo</a>'
+                || '<div style="margin-top:12px;font-size:13px"><a href="' || v_link || '" style="color:#0B4DA2">Ver o protocolo</a></div>'
+           else '<a href="' || v_link || '" style="display:inline-block;background:#0B4DA2;color:#ffffff;padding:12px 22px;border-radius:999px;text-decoration:none;font-weight:bold;font-size:15px">Acompanhar meu aviso</a>' end
     || '</td></tr>'
     || '<tr><td style="padding:20px 28px 24px">'
     ||   '<p style="margin:0;font-size:12px;line-height:1.5;color:#7A8AA0">Em emergência, ligue para a Defesa Civil (199) ou o Corpo de Bombeiros (193).</p>'
