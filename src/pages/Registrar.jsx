@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { api } from '../lib/api'
 import { CATEGORIAS } from '../lib/constants'
 import { comprimirFoto } from '../lib/imagem'
-import { bairrosFixos, carregarBairros, acharBairro, ruasDoBairro, pontoDaRua, localizarTexto, normalizar } from '../lib/endereco'
+import { bairrosFixos, carregarBairros, acharBairro, ruasDoBairro, pontoDaRua, localizarTexto, normalizar, dentroDeImperatriz, enderecoDoPonto } from '../lib/endereco'
 import Mapa from '../components/Mapa'
 import { Icone, CatDot } from '../components/ui'
 import { AVISOS_EMAIL_LIGADOS, TEL_DEFESA_CIVIL, TEL_BOMBEIROS } from '../config'
@@ -32,6 +32,13 @@ export default function Registrar() {
   const [linhas, setLinhas] = useState([])
   const [foco, setFoco] = useState(null)
   const bairroAtual = useRef('')
+  // Local: 'gps' (padrão: localização do celular + confirmar no mapa) ou 'lista' (escolher bairro e rua).
+  const [modo, setModo] = useState('gps')
+  const [confirmado, setConfirmado] = useState(false)
+  const [precisao, setPrecisao] = useState(null)
+  const [buscandoGps, setBuscandoGps] = useState(false)
+  // Qualquer mudança no ponto pede uma nova confirmação.
+  useEffect(() => { setConfirmado(false) }, [d.lat, d.lng])
   const set = (k) => (e) => setD({ ...d, [k]: e.target ? e.target.value : e })
   const { perfil } = useSessao()
   const prov = useProvedores()
@@ -46,7 +53,7 @@ export default function Registrar() {
     }))
   }, [perfil?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => { if (etapa === 1) carregarBairros().then(setBairros) }, [etapa]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (etapa === 1 && modo === 'lista') carregarBairros().then(setBairros) }, [etapa, modo]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function mudarBairro(valor) {
     bairroAtual.current = valor
@@ -92,7 +99,7 @@ export default function Registrar() {
 
   const valido = [
     !!d.categoria,
-    d.bairro.trim().length > 1 && d.rua.trim().length > 1 && d.lat != null,
+    d.bairro.trim().length > 1 && d.rua.trim().length > 1 && d.lat != null && confirmado,
     true,
     d.descricao.trim().length >= 5,
     aceite,
@@ -106,13 +113,44 @@ export default function Registrar() {
     try { setFoto(await comprimirFoto(f)) } catch { setErro('Não conseguimos ler essa foto. Tente outra.') }
   }
 
+  // Preenche bairro e rua a partir do ponto (sem apagar o que a pessoa já digitou por cima).
+  async function preencherEndereco(lat, lng) {
+    try {
+      const e = await enderecoDoPonto(lat, lng)
+      setD((x) => ({ ...x, bairro: e.bairro || x.bairro, rua: e.rua || x.rua }))
+      if (!e.bairro || !e.rua) setGps('Confira o ponto no mapa e complete o que faltar no bairro e na rua.')
+    } catch { setGps('Não conseguimos achar o nome da rua agora. Digite o bairro e a rua abaixo.') }
+  }
+
+  function marcarPonto([lat, lng]) {
+    setD((x) => ({ ...x, lat, lng })); setConfirmado(false)
+    if (modo === 'gps') preencherEndereco(lat, lng)
+  }
+
   function minhaLocalizacao() {
-    if (!navigator.geolocation) { setGps('Seu aparelho não permite usar a localização.'); return }
-    setGps('Buscando sua localização…')
+    if (!navigator.geolocation) { setGps('Seu aparelho não permite usar a localização. Escolha o bairro e a rua.'); setModo('lista'); return }
+    setGps('Buscando sua localização…'); setBuscandoGps(true)
     navigator.geolocation.getCurrentPosition(
-      (p) => { setD((x) => ({ ...x, lat: p.coords.latitude, lng: p.coords.longitude })); setGps('') },
-      () => setGps('Não foi possível pegar a localização. Toque no mapa para marcar.'),
-      { enableHighAccuracy: true, timeout: 10000 },
+      async (p) => {
+        setBuscandoGps(false)
+        const { latitude: lat, longitude: lng, accuracy } = p.coords
+        if (!dentroDeImperatriz(lat, lng)) {
+          setGps('Parece que você não está em Imperatriz agora. Escolha o bairro e a rua do local do problema.')
+          setModo('lista'); return
+        }
+        setModo('gps'); setPrecisao(accuracy); setFoco([lat, lng]); setLinhas([]); setConfirmado(false)
+        setD((x) => ({ ...x, lat, lng, bairro: '', rua: '' }))
+        setGps(accuracy > 60 ? `A localização está aproximada (cerca de ${Math.round(accuracy)} m). Arraste o pino até o ponto exato.` : 'Achamos você! Confira o pino no mapa.')
+        await preencherEndereco(lat, lng)
+      },
+      (e) => {
+        setBuscandoGps(false)
+        setGps(e.code === 1
+          ? 'Você não permitiu usar a localização. Sem problema: escolha o bairro e a rua.'
+          : 'Não foi possível pegar a localização agora. Escolha o bairro e a rua.')
+        setModo('lista')
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
     )
   }
 
@@ -190,47 +228,78 @@ export default function Registrar() {
             {etapa === 1 && (
               <div>
                 <h2 className="font-display text-xl font-semibold">Onde está o problema?</h2>
-                <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="label" htmlFor="bairro">Bairro *</label>
-                    <select id="bairro" className="input" value={bairroManual ? '__outro' : d.bairro}
-                      onChange={(e) => { const v = e.target.value; if (v === '__outro') { setBairroManual(true); mudarBairro('') } else { setBairroManual(false); mudarBairro(v) } }}>
-                      <option value="" disabled>Escolha o bairro</option>
-                      {bairros.map((b) => <option key={b.nome} value={b.nome}>{b.nome}</option>)}
-                      <option value="__outro">Meu bairro não está na lista</option>
-                    </select>
-                    {bairroManual && <input className="input mt-2" value={d.bairro} onChange={(e) => mudarBairro(e.target.value)} placeholder="Digite o nome do bairro" maxLength={80} autoFocus />}
+                <p className="mt-1 text-sm text-slate-500">Se você está no local agora, use a localização do celular. É o jeito mais rápido e preciso.</p>
+
+                <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-brand/20 bg-brand-50 p-4 sm:flex-row sm:items-center">
+                  <div className="flex-1">
+                    <div className="font-semibold text-deep">Estou no local do problema</div>
+                    <div className="text-sm text-slate-600">O mapa mostra onde você está e você confirma o ponto.</div>
                   </div>
-                  <div>
-                    <label className="label" htmlFor="rua">Rua ou avenida *</label>
-                    {ruas?.length > 0 && (
-                      <select id="rua" className="input" value={ruaManual ? '__outro' : d.rua}
-                        onChange={(e) => { const v = e.target.value; if (v === '__outro') { setRuaManual(true); setLinhas([]); setD((x) => ({ ...x, rua: '', lat: null, lng: null })) } else { setRuaManual(false); mudarRua(v) } }}>
-                        <option value="" disabled>Escolha a rua</option>
-                        {ruas.map((r) => <option key={r.nome} value={r.nome}>{r.nome}</option>)}
-                        <option value="__outro">Minha rua não está na lista</option>
+                  <button type="button" onClick={minhaLocalizacao} disabled={buscandoGps} className="btn-brand shrink-0 py-3"><Icone.pin /> {buscandoGps ? 'Buscando…' : d.lat != null && modo === 'gps' ? 'Buscar de novo' : 'Usar minha localização'}</button>
+                </div>
+                <button type="button" onClick={() => { setModo(modo === 'lista' ? 'gps' : 'lista'); setGps('') }} className="mt-3 text-sm font-semibold text-brand underline">
+                  {modo === 'lista' ? 'Usar a localização do celular' : 'Não estou no local: escolher bairro e rua'}
+                </button>
+
+                {modo === 'lista' && (
+                  <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="label" htmlFor="bairro">Bairro *</label>
+                      <select id="bairro" className="input" value={bairroManual ? '__outro' : d.bairro}
+                        onChange={(e) => { const v = e.target.value; if (v === '__outro') { setBairroManual(true); mudarBairro('') } else { setBairroManual(false); mudarBairro(v) } }}>
+                        <option value="" disabled>Escolha o bairro</option>
+                        {bairros.map((b) => <option key={b.nome} value={b.nome}>{b.nome}</option>)}
+                        <option value="__outro">Meu bairro não está na lista</option>
                       </select>
-                    )}
-                    {(!ruas?.length || ruaManual) && (
-                      <input id={ruas?.length ? undefined : 'rua'} className={`input ${ruas?.length ? 'mt-2' : ''}`} value={d.rua} onChange={(e) => setD((x) => ({ ...x, rua: e.target.value }))} onBlur={ruaDigitada}
-                        placeholder={!d.bairro.trim() ? 'Escolha o bairro primeiro' : ruas === null && !bairroManual ? 'Carregando as ruas… (ou digite aqui)' : 'Digite o nome da rua'} maxLength={120} disabled={!d.bairro.trim()} />
-                    )}
+                      {bairroManual && <input className="input mt-2" value={d.bairro} onChange={(e) => mudarBairro(e.target.value)} placeholder="Digite o nome do bairro" maxLength={80} autoFocus />}
+                    </div>
+                    <div>
+                      <label className="label" htmlFor="rua">Rua ou avenida *</label>
+                      {ruas?.length > 0 && (
+                        <select id="rua" className="input" value={ruaManual ? '__outro' : d.rua}
+                          onChange={(e) => { const v = e.target.value; if (v === '__outro') { setRuaManual(true); setLinhas([]); setD((x) => ({ ...x, rua: '', lat: null, lng: null })) } else { setRuaManual(false); mudarRua(v) } }}>
+                          <option value="" disabled>Escolha a rua</option>
+                          {ruas.map((r) => <option key={r.nome} value={r.nome}>{r.nome}</option>)}
+                          <option value="__outro">Minha rua não está na lista</option>
+                        </select>
+                      )}
+                      {(!ruas?.length || ruaManual) && (
+                        <input id={ruas?.length ? undefined : 'rua'} className={`input ${ruas?.length ? 'mt-2' : ''}`} value={d.rua} onChange={(e) => setD((x) => ({ ...x, rua: e.target.value }))} onBlur={ruaDigitada}
+                          placeholder={!d.bairro.trim() ? 'Escolha o bairro primeiro' : ruas === null && !bairroManual ? 'Carregando as ruas… (ou digite aqui)' : 'Digite o nome da rua'} maxLength={120} disabled={!d.bairro.trim()} />
+                      )}
+                    </div>
                   </div>
-                  <div className="sm:col-span-2">
-                    <label className="label" htmlFor="ref">Ponto de referência</label>
-                    <input id="ref" className="input" value={d.referencia} onChange={set('referencia')} placeholder="Ex.: em frente à escola do bairro" maxLength={160} />
+                )}
+
+                <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200">
+                  <Mapa escolha={d.lat != null ? [d.lat, d.lng] : null} onPick={marcarPonto} foco={foco} linhas={linhas} precisao={modo === 'gps' ? precisao : null} className="h-[320px]" />
+                </div>
+                <p className="mt-2 text-xs text-slate-500" role="status">{gps || (d.lat != null ? 'Arraste o pino ou toque no mapa para ajustar.' : modo === 'gps' ? 'Toque em "Usar minha localização" ou toque no mapa no local do problema.' : 'Escolha o bairro: o mapa vai até ele e mostra a lista de ruas.')}</p>
+
+                {d.lat != null && (
+                  confirmado ? (
+                    <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-emerald-50 p-3 text-sm text-emerald-900">
+                      <span><b>Local confirmado.</b> Se mudar o pino, confirme de novo.</span>
+                    </div>
+                  ) : (
+                    <div className="mt-3 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:flex-row sm:items-center">
+                      <p className="flex-1 text-sm text-amber-900"><b>O pino está no lugar exato do problema?</b> Se não estiver, arraste o pino ou toque no ponto certo.</p>
+                      <button type="button" onClick={() => setConfirmado(true)} className="btn shrink-0 bg-emerald-600 text-white hover:bg-emerald-700">Sim, é aqui</button>
+                    </div>
+                  )
+                )}
+
+                {modo === 'gps' && d.lat != null && (
+                  <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                    <div><label className="label" htmlFor="bairro-gps">Bairro *</label><input id="bairro-gps" className="input" value={d.bairro} onChange={set('bairro')} maxLength={80} placeholder="Digite o bairro" /></div>
+                    <div><label className="label" htmlFor="rua-gps">Rua ou avenida *</label><input id="rua-gps" className="input" value={d.rua} onChange={set('rua')} maxLength={120} placeholder="Digite a rua" /></div>
                   </div>
+                )}
+
+                <div className="mt-4">
+                  <label className="label" htmlFor="ref">Ponto de referência</label>
+                  <input id="ref" className="input" value={d.referencia} onChange={set('referencia')} placeholder="Ex.: em frente à escola do bairro" maxLength={160} />
                 </div>
-                <div className="mt-5 flex flex-wrap items-center justify-between gap-2">
-                  <span className="label !mb-0">Marque no mapa *</span>
-                  <span className="flex flex-wrap gap-2">
-                                        <button type="button" onClick={minhaLocalizacao} className="btn-ghost !py-1.5 text-xs"><Icone.pin /> Usar minha localização</button>
-                  </span>
-                </div>
-                <div className="mt-2 overflow-hidden rounded-2xl border border-slate-200">
-                  <Mapa escolha={d.lat != null ? [d.lat, d.lng] : null} onPick={([lat, lng]) => setD({ ...d, lat, lng })} foco={foco} linhas={linhas} className="h-[320px]" />
-                </div>
-                <p className="mt-2 text-xs text-slate-500">{gps || (d.lat != null ? 'Ponto marcado. Toque em outro lugar do mapa para ajustar.' : 'Escolha o bairro: o mapa vai até ele e mostra a lista de ruas.')}</p>
               </div>
             )}
 
