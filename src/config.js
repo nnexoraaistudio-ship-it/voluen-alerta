@@ -8,7 +8,7 @@ export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_p
 
 export const MODO_DEMO = import.meta.env.VITE_MODO_DEMO === '1' || !SUPABASE_URL || !SUPABASE_ANON_KEY
 
-export const CONTATO_EMAIL = 'nnexora.ai.studio@gmail.com'
+export const CONTATO_EMAIL = 'contato@voluen.com.br'
 export const RESPONSAVEL = 'Filipe Assunção'
 export const CIDADE = 'Imperatriz-MA'
 export const CENTRO_MAPA = [-5.5235, -47.4735]
