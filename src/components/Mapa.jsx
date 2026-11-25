@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMapEvents, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, Polyline, Circle, useMapEvents, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { CATEGORIAS } from '../lib/constants'
@@ -26,7 +26,7 @@ function Voar({ alvo, zoom }) {
   return null
 }
 
-export default function Mapa({ pontos = [], escolha, onPick, foco, linhas = [], className = 'h-[420px]', zoom = 13, interativo = true, calor = null }) {
+export default function Mapa({ pontos = [], escolha, onPick, foco, linhas = [], className = 'h-[420px]', zoom = 13, interativo = true, calor = null, precisao = null }) {
   return (
     <MapContainer center={escolha || CENTRO_MAPA} zoom={escolha ? 16 : zoom} minZoom={11} maxBounds={LIMITES} scrollWheelZoom={interativo} dragging={interativo} className={`w-full ${className}`}>
       <TileLayer
@@ -51,7 +51,11 @@ export default function Mapa({ pontos = [], escolha, onPick, foco, linhas = [], 
         </Marker>
       ))}
       {linhas.length > 0 && <Polyline positions={linhas} pathOptions={{ color: '#2BB3E6', weight: 7, opacity: 0.85 }} />}
-      {escolha && <Marker position={escolha} icon={iconeDe('#0B4DA2', true)} />}
+      {escolha && precisao > 15 && <Circle center={escolha} radius={Math.min(precisao, 500)} pathOptions={{ color: '#2BB3E6', weight: 1, fillOpacity: 0.12 }} />}
+      {escolha && (
+        <Marker position={escolha} icon={iconeDe('#0B4DA2', true)} draggable={!!onPick}
+          eventHandlers={onPick ? { dragend: (e) => { const p = e.target.getLatLng(); onPick([p.lat, p.lng]) } } : undefined} />
+      )}
     </MapContainer>
   )
 }

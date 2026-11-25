@@ -133,3 +133,21 @@ export async function localizarTexto(rua, bairro) {
   const r = await buscarTexto(`${rua}, Imperatriz, Maranhão`, perto)
   return r
 }
+
+// Endereço aproximado de um ponto do mapa (bairro e rua), para preencher sozinho depois do GPS.
+// Mesmos limites que o banco aceita (supabase/schema.sql).
+export const dentroDeImperatriz = (lat, lng) => lat >= -5.75 && lat <= -5.30 && lng >= -47.70 && lng <= -47.25
+
+export async function enderecoDoPonto(lat, lng) {
+  const espera = 1100 - (Date.now() - ultima)
+  if (espera > 0) await new Promise((r) => setTimeout(r, espera))
+  ultima = Date.now()
+  const p = new URLSearchParams({ lat: String(lat), lon: String(lng), format: 'jsonv2', zoom: '18', addressdetails: '1', 'accept-language': 'pt-BR' })
+  const r = await fetch(`${NOMINATIM.replace('/search', '/reverse')}?${p}`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(8000) })
+  if (!r.ok) throw new Error('busca indisponível')
+  const a = (await r.json()).address || {}
+  return {
+    bairro: a.suburb || a.neighbourhood || a.quarter || a.city_district || a.residential || '',
+    rua: a.road || a.pedestrian || a.footway || a.residential || '',
+  }
+}
