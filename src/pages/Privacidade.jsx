@@ -22,6 +22,7 @@ export default function Privacidade() {
           <ul>
             <li><b>Sobre a ocorrência:</b> tipo do problema, bairro, rua, ponto de referência, local marcado no mapa, descrição, foto (se você enviar), data e hora do registro.</li>
             <li><b>Sobre você, só se quiser informar:</b> nome, telefone ou e-mail. O registro anônimo é sempre possível.</li>
+            <li><b>Se você entrar com Google ou Apple (opcional):</b> recebemos dessas empresas apenas o seu nome e e-mail, para manter a sua conta e mostrar as ocorrências que você registrou. Não recebemos sua senha nem acesso a mais nada da sua conta. Para apagar a sua conta, escreva para o contato no fim desta página.</li>
             <li><b>Registro do seu consentimento:</b> a data e a hora em que você aceitou esta política.</li>
             <li><b>Proteção contra abuso:</b> para impedir envios em massa, guardamos por no máximo 1 dia um código embaralhado gerado a partir da conexão de quem registra. Esse código não permite identificar você e é apagado automaticamente.</li>
           </ul>
@@ -58,10 +59,10 @@ export default function Privacidade() {
           <p>Você pode pedir, a qualquer momento: confirmação de que temos dados seus, acesso a eles, correção, exclusão, informação sobre com quem foram compartilhados e a retirada do seu consentimento. Para isso, escreva para <span className="select-all font-semibold text-brand">{CONTATO_EMAIL}</span> informando o número do protocolo, se tiver. Responderemos em até 15 dias. Você também pode reclamar na Autoridade Nacional de Proteção de Dados (ANPD).</p>
         </S>
         <S n="9" t="Segurança">
-          <p>O painel de gestão só pode ser acessado por pessoas autorizadas, com login e senha, e a sessão é encerrada sozinha após 30 minutos sem uso. Usamos conexão segura (https). Cada pessoa da equipe vê só o que precisa para a sua função: nome, telefone e e-mail do morador ficam visíveis apenas para administradores e são apagados automaticamente quando a ocorrência é resolvida ou recusada. O número de protocolo tem um final aleatório, para que ninguém consiga adivinhar o protocolo de outra pessoa.</p>
+          <p>O painel de gestão só pode ser acessado por pessoas autorizadas, com login (e-mail e senha, Google ou Apple) e função liberada por um administrador, e a sessão é encerrada sozinha após 30 minutos sem uso. Usamos conexão segura (https). Cada pessoa da equipe vê só o que precisa para a sua função: nome, telefone e e-mail do morador ficam visíveis apenas para administradores e são apagados automaticamente quando a ocorrência é resolvida ou recusada. O número de protocolo tem um final aleatório, para que ninguém consiga adivinhar o protocolo de outra pessoa.</p>
         </S>
         <S n="10" t="Cookies e armazenamento no navegador">
-          <p>O site não usa cookies de propaganda nem de rastreamento. Guardamos no seu navegador apenas o necessário para o funcionamento, como a confirmação de que você viu o aviso de privacidade, os números de protocolo que você registrou neste aparelho (para você não perdê-los) e, para a equipe, a sessão de login. Esses dados ficam só no seu aparelho e somem se você limpar os dados do navegador.</p>
+          <p>O site não usa cookies de propaganda nem de rastreamento. Guardamos no seu navegador apenas o necessário para o funcionamento, como a confirmação de que você viu o aviso de privacidade, os números de protocolo que você registrou neste aparelho (para você não perdê-los) e a sessão de login de quem entrou na conta. Esses dados ficam só no seu aparelho e somem se você limpar os dados do navegador.</p>
         </S>
         <S n="11" t="Crianças e adolescentes">
           <p>O serviço é voltado a maiores de 18 anos. Menores de idade devem fazer o registro com a ajuda de um responsável.</p>

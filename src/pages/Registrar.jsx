@@ -9,6 +9,8 @@ import { Icone, CatDot } from '../components/ui'
 import { AVISOS_EMAIL_LIGADOS, TEL_DEFESA_CIVIL, TEL_BOMBEIROS } from '../config'
 import { guardarProtocolo } from '../lib/meusProtocolos'
 import { compartilhar, enderecoSite } from '../lib/compartilhar'
+import { useSessao } from '../lib/hooks'
+import EntrarSocial, { useProvedores } from '../components/EntrarSocial'
 
 const ETAPAS = ['Tipo', 'Local', 'Foto', 'Descrição', 'Enviar']
 const INICIAL = { categoria: '', bairro: '', rua: '', referencia: '', lat: null, lng: null, descricao: '', contato_nome: '', contato_telefone: '', contato_email: '' }
@@ -31,6 +33,18 @@ export default function Registrar() {
   const [foco, setFoco] = useState(null)
   const bairroAtual = useRef('')
   const set = (k) => (e) => setD({ ...d, [k]: e.target ? e.target.value : e })
+  const { perfil } = useSessao()
+  const prov = useProvedores()
+
+  // Quem entrou com Google/Apple já tem nome e e-mail preenchidos (pode apagar se não quiser enviar).
+  useEffect(() => {
+    if (!perfil) return
+    setD((x) => ({
+      ...x,
+      contato_nome: x.contato_nome || (perfil.nome && perfil.nome !== perfil.email ? perfil.nome : ''),
+      contato_email: x.contato_email || perfil.email || '',
+    }))
+  }, [perfil?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { if (etapa === 1) carregarBairros().then(setBairros) }, [etapa]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -127,6 +141,19 @@ export default function Registrar() {
             <a href={`tel:${TEL_BOMBEIROS}`} className="btn flex-1 whitespace-nowrap border border-rose-300 bg-white px-3 py-2 text-[13px] sm:text-sm text-rose-800 hover:bg-rose-100"><Icone.telefone /> Bombeiros {TEL_BOMBEIROS}</a>
           </div>
         </div>
+
+        {etapa === 0 && !perfil && (prov.google || prov.apple) && (
+          <div className="card mt-6 grid gap-4 p-5 sm:grid-cols-[1fr_16rem] sm:items-center">
+            <div>
+              <div className="font-semibold text-deep">Quer ir mais rápido? (opcional)</div>
+              <p className="mt-1 text-sm text-slate-500">Entre com a sua conta e seu nome e e-mail já vêm preenchidos. Você também passa a ver suas ocorrências em qualquer aparelho.</p>
+            </div>
+            <EntrarSocial volta="/registrar" />
+          </div>
+        )}
+        {perfil && etapa === 0 && (
+          <p className="mt-6 text-sm text-slate-500">Registrando como <b className="text-deep">{perfil.nome}</b>. Esta ocorrência vai aparecer em <Link to="/conta" className="font-semibold text-brand">Minha conta</Link>.</p>
+        )}
 
         <div className="card mt-8 p-5 sm:p-8">
           <ol className="grid grid-cols-5 gap-2" aria-label="Etapas">

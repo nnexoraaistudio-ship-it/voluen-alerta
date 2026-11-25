@@ -29,9 +29,12 @@ export default function PainelLayout() {
   if (!perfil.papel) return (
     <div className="grid min-h-screen place-items-center bg-mist p-6 text-center">
       <div className="card max-w-md p-8">
-        <h1 className="text-xl font-semibold">Seu acesso ainda não foi liberado</h1>
-        <p className="mt-2 text-sm text-slate-600">Você entrou como {perfil.email}, mas um administrador ainda precisa definir sua função.</p>
-        <button onClick={() => api.sair()} className="btn-ghost mt-5">Sair</button>
+        <h1 className="text-xl font-semibold">Esta área é só para a equipe</h1>
+        <p className="mt-2 text-sm text-slate-600">Você entrou como {perfil.email}, mas esta conta não tem acesso ao painel. Se você é da equipe, peça a um administrador para liberar o seu e-mail na tela Equipe.</p>
+        <div className="mt-5 flex flex-wrap justify-center gap-3">
+          <Link to="/" className="btn-brand">Ir para o site</Link>
+          <button onClick={() => api.sair()} className="btn-ghost">Sair</button>
+        </div>
       </div>
     </div>
   )

@@ -7,6 +7,28 @@ import { Carregando, Icone, StatusPill } from '../components/ui'
 import { dataHora, data } from '../lib/format'
 import { compartilhar, enderecoSite } from '../lib/compartilhar'
 import { lerProtocolos, esquecerProtocolo } from '../lib/meusProtocolos'
+import { useSessao } from '../lib/hooks'
+import { MinhasOcorrencias } from './Conta'
+import { useProvedores } from '../components/EntrarSocial'
+
+function DaConta() {
+  const { perfil } = useSessao()
+  const prov = useProvedores()
+  if (perfil) return (
+    <div className="card mb-6 p-5">
+      <h2 className="text-lg font-semibold">Minhas ocorrências</h2>
+      <p className="mt-1 text-sm text-slate-500">Registradas com a sua conta ({perfil.email}).</p>
+      <div className="mt-3"><MinhasOcorrencias perfil={perfil} /></div>
+    </div>
+  )
+  if (!prov.google && !prov.apple) return null
+  return (
+    <div className="card mb-6 flex flex-col gap-3 p-5 sm:flex-row sm:items-center">
+      <p className="flex-1 text-sm text-slate-600">Entre com Google ou Apple para ver todas as suas ocorrências em qualquer aparelho, sem digitar protocolo.</p>
+      <Link to="/conta" className="btn-ghost shrink-0"><Icone.pessoa /> Entrar</Link>
+    </div>
+  )
+}
 
 function MeusProtocolos() {
   const [lista, setLista] = useState(lerProtocolos)
@@ -85,6 +107,7 @@ export default function Acompanhar() {
               </div>
             </div>
           )}
+          {r === undefined && !carregando && !erro && <DaConta />}
           {r === undefined && !carregando && !erro && <MeusProtocolos />}
           {r === undefined && !carregando && !erro && (
             <div className="card p-6">

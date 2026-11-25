@@ -42,6 +42,10 @@ create table if not exists public.ocorrencias (
 alter table public.ocorrencias add column if not exists tem_contato boolean
   generated always as (coalesce(contato_nome, contato_telefone, contato_email) is not null) stored;
 
+-- Conta do morador que registrou (quando ele entrou com Google/Apple). Fica vazio para quem registra sem conta.
+alter table public.ocorrencias add column if not exists cidadao_id uuid references auth.users (id) on delete set null;
+create index if not exists ocorrencias_cidadao_idx on public.ocorrencias (cidadao_id) where cidadao_id is not null;
+
 create index if not exists ocorrencias_status_idx on public.ocorrencias (status);
 create index if not exists ocorrencias_created_idx on public.ocorrencias (created_at desc);
 
@@ -70,13 +74,14 @@ language sql stable security definer set search_path = public as $$
   select papel from public.perfis where id = auth.uid()
 $$;
 
--- Cria o perfil automaticamente quando alguém da equipe é cadastrado.
--- O papel começa vazio: um administrador precisa definir depois.
+-- Cria o perfil automaticamente quando alguém entra pela primeira vez (equipe ou morador).
+-- O papel começa vazio = sem acesso ao painel. Só um administrador libera, na tela Equipe.
 create or replace function public.criar_perfil() returns trigger
 language plpgsql security definer set search_path = public as $$
 begin
   insert into public.perfis (id, email, nome)
-  values (new.id, new.email, coalesce(new.raw_user_meta_data ->> 'nome', new.email))
+  values (new.id, new.email, coalesce(new.raw_user_meta_data ->> 'nome', new.raw_user_meta_data ->> 'full_name',
+          new.raw_user_meta_data ->> 'name', new.email))
   on conflict (id) do nothing;
   return new;
 end $$;
@@ -187,10 +192,10 @@ begin
                  || lpad(nextval('public.protocolo_seq')::text, 5, '0') || '-'
                  || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 4));
   insert into public.ocorrencias (protocolo, categoria, bairro, rua, referencia, lat, lng, descricao,
-    foto_path, contato_nome, contato_telefone, contato_email, consentimento_em)
+    foto_path, contato_nome, contato_telefone, contato_email, consentimento_em, cidadao_id)
   values (v_protocolo, p_categoria, trim(p_bairro), trim(p_rua), nullif(trim(p_referencia), ''), p_lat, p_lng,
     trim(p_descricao), p_foto_path, nullif(trim(p_contato_nome), ''), nullif(trim(p_contato_telefone), ''),
-    v_email, now())
+    v_email, now(), case when public.meu_papel() is null then auth.uid() end)
   returning id into v_id;
   insert into public.historico (ocorrencia_id, status) values (v_id, 'moderacao');
   return v_protocolo;
@@ -210,6 +215,15 @@ language sql stable security definer set search_path = public as $$
   where o.protocolo = upper(trim(p_protocolo))
 $$;
 
+-- Ocorrências do morador que entrou com Google/Apple (só as dele).
+create or replace function public.minhas_ocorrencias() returns json
+language sql stable security definer set search_path = public as $$
+  select coalesce(json_agg(json_build_object('protocolo', protocolo, 'categoria', categoria, 'bairro', bairro,
+    'rua', rua, 'status', status, 'created_at', created_at) order by created_at desc), '[]'::json)
+  from public.ocorrencias
+  where auth.uid() is not null and cidadao_id = auth.uid()
+$$;
+
 create or replace function public.mudar_status(p_id uuid, p_status text, p_mensagem text, p_motivo text) returns void
 language plpgsql security definer set search_path = public as $$
 declare
@@ -220,10 +234,10 @@ begin
   if v_atual is null then raise exception 'Ocorrência não encontrada.'; end if;
 
   if v_atual = 'moderacao' then
-    if v_papel not in ('moderador', 'admin') then raise exception 'Sem permissão para moderar.'; end if;
+    if coalesce(v_papel, '') not in ('moderador', 'admin') then raise exception 'Sem permissão para moderar.'; end if;
     if p_status not in ('recebida', 'recusada') then raise exception 'Na moderação só é possível aprovar ou recusar.'; end if;
   else
-    if v_papel not in ('prefeitura', 'admin') then raise exception 'Sem permissão para mudar a situação.'; end if;
+    if coalesce(v_papel, '') not in ('prefeitura', 'admin') then raise exception 'Sem permissão para mudar a situação.'; end if;
     if p_status not in ('recebida', 'em_analise', 'encaminhada', 'resolvida') then raise exception 'Situação inválida.'; end if;
   end if;
 
@@ -246,7 +260,7 @@ end $$;
 create or replace function public.remover_foto(p_id uuid) returns void
 language plpgsql security definer set search_path = public as $$
 begin
-  if public.meu_papel() not in ('admin', 'moderador') then raise exception 'Sem permissão.'; end if;
+  if coalesce(public.meu_papel(), '') not in ('admin', 'moderador') then raise exception 'Sem permissão.'; end if;
   update public.ocorrencias set foto_path = null where id = p_id;
 end $$;
 
@@ -263,7 +277,7 @@ end $$;
 create or replace function public.apagar_contato(p_id uuid) returns void
 language plpgsql security definer set search_path = public as $$
 begin
-  if public.meu_papel() not in ('admin', 'moderador') then raise exception 'Sem permissão.'; end if;
+  if coalesce(public.meu_papel(), '') not in ('admin', 'moderador') then raise exception 'Sem permissão.'; end if;
   update public.ocorrencias set contato_nome = null, contato_telefone = null, contato_email = null where id = p_id;
 end $$;
 
@@ -276,6 +290,8 @@ revoke all on function public.remover_foto(uuid) from public, anon;
 grant execute on function public.remover_foto(uuid) to authenticated;
 grant execute on function public.registrar_ocorrencia(text, text, text, text, double precision, double precision, text, text, text, text, text) to anon, authenticated;
 grant execute on function public.consultar_protocolo(text) to anon, authenticated;
+revoke all on function public.minhas_ocorrencias() from public, anon;
+grant execute on function public.minhas_ocorrencias() to authenticated;
 grant execute on function public.mudar_status(uuid, text, text, text) to authenticated;
 
 -- ---------- Fotos ----------
