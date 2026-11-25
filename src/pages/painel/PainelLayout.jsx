@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { Navigate, NavLink, Outlet, Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Navigate, NavLink, Outlet, Link, useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api'
 import { useCarregar, useSessao } from '../../lib/hooks'
 import { PAPEIS, pode } from '../../lib/constants'
@@ -12,6 +12,45 @@ export default function PainelLayout() {
   const { perfil, carregado } = useSessao()
   const dados = useCarregar(() => (perfil?.papel ? api.listarTodas() : Promise.resolve([])), [perfil?.id, perfil?.papel])
   const [aberto, setAberto] = useState(null)
+  const [novas, setNovas] = useState(0)
+  const [som, setSom] = useState(() => { try { return localStorage.getItem('voluen-painel-som') !== 'nao' } catch { return true } })
+  const vistas = useRef(null)
+  const ir = useNavigate()
+
+  // Tempo real: atualiza a lista sozinho quando chega ocorrência nova ou muda uma situação.
+  // Plano B: confere de novo a cada 20 segundos e quando a aba volta a ficar visível.
+  useEffect(() => {
+    if (!perfil?.papel) return
+    const atualizar = () => dados.atualizar()
+    const sair = api.aoMudarOcorrencias(atualizar)
+    const t = setInterval(atualizar, 20000)
+    const aoVoltar = () => { if (document.visibilityState === 'visible') atualizar() }
+    document.addEventListener('visibilitychange', aoVoltar)
+    return () => { sair(); clearInterval(t); document.removeEventListener('visibilitychange', aoVoltar) }
+  }, [perfil?.id, perfil?.papel]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Detecta ocorrências novas (que não estavam na lista antes) e avisa na tela, com som opcional.
+  useEffect(() => {
+    if (!dados.dados) return
+    const ids = new Set(dados.dados.map((o) => o.id))
+    if (vistas.current) {
+      const chegaram = dados.dados.filter((o) => !vistas.current.has(o.id)).length
+      if (chegaram > 0) { setNovas((n) => n + chegaram); if (som) tocarAviso() }
+    }
+    vistas.current = ids
+  }, [dados.dados]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const base = 'Painel · Imperatriz em Alerta'
+    document.title = novas > 0 ? `(${novas}) ${base}` : base
+    return () => { document.title = 'Imperatriz em Alerta' }
+  }, [novas])
+
+  function mudarSom() {
+    const v = !som; setSom(v)
+    try { localStorage.setItem('voluen-painel-som', v ? 'sim' : 'nao') } catch { /* nada */ }
+    if (v) tocarAviso()
+  }
 
   // Segurança: sai sozinho do painel depois de 30 minutos sem uso (computador esquecido aberto).
   useEffect(() => {
@@ -69,7 +108,10 @@ export default function PainelLayout() {
           <div className="hidden border-t border-slate-100 p-5 lg:absolute lg:inset-x-0 lg:bottom-0 lg:block">
             <div className="text-sm font-semibold">{perfil.nome}</div>
             <div className="text-xs text-slate-500">{PAPEIS[perfil.papel].nome}</div>
-            <button onClick={() => api.sair()} className="mt-3 text-sm font-semibold text-brand">Sair</button>
+            <div className="mt-3 flex items-center gap-4">
+              <button onClick={() => api.sair()} className="text-sm font-semibold text-brand">Sair</button>
+              <button onClick={mudarSom} className="text-xs font-semibold text-slate-500 hover:text-deep" aria-pressed={som}>{som ? '🔔 Som ligado' : '🔕 Som desligado'}</button>
+            </div>
             {MODO_DEMO && <button onClick={() => { api.reiniciarDemo(); dados.recarregar() }} className="mt-2 block text-xs text-slate-400 hover:text-slate-600">Restaurar dados de exemplo</button>}
           </div>
         </aside>
@@ -79,6 +121,14 @@ export default function PainelLayout() {
         </main>
       </div>
       {aberto && <Detalhe id={aberto} fechar={() => setAberto(null)} />}
+      {novas > 0 && (
+        <div className="no-print fixed bottom-5 right-5 z-[1200] flex max-w-sm items-center gap-3 rounded-2xl bg-deep px-4 py-3 text-white shadow-2xl" role="status" aria-live="polite">
+          <span className="relative flex h-3 w-3 shrink-0"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" /><span className="relative inline-flex h-3 w-3 rounded-full bg-accent" /></span>
+          <span className="flex-1 text-sm">{novas === 1 ? 'Chegou 1 ocorrência nova.' : `Chegaram ${novas} ocorrências novas.`}</span>
+          <button onClick={() => { setNovas(0); ir('/painel/moderacao') }} className="rounded-full bg-accent px-3 py-1 text-xs font-semibold text-deep">Ver</button>
+          <button onClick={() => setNovas(0)} className="text-lg leading-none text-slate-300 hover:text-white" aria-label="Fechar aviso">×</button>
+        </div>
+      )}
     </PainelCtx.Provider>
   )
 }
@@ -111,4 +161,22 @@ function TrocarSenha({ perfil }) {
       </form>
     </div>
   )
+}
+
+// Aviso sonoro curto (dois bipes suaves), gerado no próprio navegador.
+function tocarAviso() {
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext
+    if (!Ctx) return
+    const ctx = new Ctx()
+    ;[0, 0.18].forEach((t, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain()
+      o.type = 'sine'; o.frequency.value = i ? 1046 : 784
+      g.gain.setValueAtTime(0.0001, ctx.currentTime + t)
+      g.gain.exponentialRampToValueAtTime(0.15, ctx.currentTime + t + 0.02)
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.16)
+      o.connect(g).connect(ctx.destination); o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.18)
+    })
+    setTimeout(() => ctx.close(), 600)
+  } catch { /* sem som */ }
 }

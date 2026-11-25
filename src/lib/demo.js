@@ -174,6 +174,11 @@ export const demoApi = {
     ouvintes.forEach((f) => f(sessao))
     if (volta) window.location.hash = '#' + volta
   },
+  aoMudarOcorrencias(fn) {
+    const f = (e) => { if (e.key === CHAVE) fn() }
+    window.addEventListener('storage', f)
+    return () => window.removeEventListener('storage', f)
+  },
   async minhasOcorrencias() {
     if (!sessao) return []
     return ler().ocorrencias.filter((o) => o.cidadao_id === sessao.id)

@@ -19,6 +19,8 @@ export function useCarregar(fn, deps = []) {
     )
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
+  // Atualiza sem mostrar "carregando" (usado pelas atualizações automáticas do painel).
+  const atualizar = useCallback(() => fn().then((dados) => setEstado({ dados, carregando: false, erro: null }), () => {}), deps) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { recarregar() }, [recarregar])
-  return { ...estado, recarregar }
+  return { ...estado, recarregar, atualizar }
 }
