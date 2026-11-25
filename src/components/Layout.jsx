@@ -95,7 +95,7 @@ function Rodape() {
       <div className="border-t border-white/10">
         <div className="wrap flex flex-col gap-2 py-5 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
           <span className="flex flex-wrap items-center gap-x-2 gap-y-1">Desenvolvido por <VoluenMarca claro className="h-3.5 w-auto opacity-90" /> · Tecnologia para cidades que evoluem. © 2026 Voluen</span>
-          <span className="flex gap-4"><Link to="/privacidade" className="hover:text-slate-300">Privacidade</Link><Link to="/equipe" className="hover:text-slate-300">Acesso da equipe</Link></span>
+          <span className="flex gap-4"><Link to="/privacidade" className="hover:text-slate-300">Privacidade</Link></span>
         </div>
       </div>
     </footer>
